@@ -5,7 +5,7 @@
 #define NUMBER_ROWS 8
 #define NUMBER_COLUMNS_PER_PANEL 32
 #define NUMBER_PANELS 1
-#define MAX_TEXT_LENGTH 42
+#define MAX_TEXT_LENGTH 200
 #define ROW_INT_LENGTH 8  // each row can contain up to 8 ints of bits (8 * sizeof(int) * 8 bits/byte) worth of text (42 letters max)
 #define NUMBER_COLUMNS_PER_PANEL 32
 #define NUMBER_PANELS 1

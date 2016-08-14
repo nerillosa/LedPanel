@@ -41,14 +41,15 @@ int main(int argc, char **argv)
     if (!bcm2835_init())
 	return 1;
 
-    int intArrayBuffer[64];
-    memset(intArrayBuffer, 0, sizeof(intArrayBuffer));
-
-    int *iptr = (int*)intArrayBuffer;
-    char *str = "CUANDO ESTABA YO EN LA CARCEL YO SOLITO";
-    fillStringIntBuffer(iptr , str);
-
+    char *str = "CUANDO ESTABA YO EN LA CARCEL YO SOLITO ME ENTRETENIA CONTANDO LOS ESLABONES QUE MI CADENA TENIA";
     size_t str_length = strnlen(str, MAX_TEXT_LENGTH);
+    int numInts = (str_length * LETTER_WIDTH * NUMBER_ROWS/(sizeof(int)*8) ) + 1;
+
+    int *intArrayBuffer = (int*)calloc(numInts, sizeof(int));
+
+
+    fillStringIntBuffer(intArrayBuffer , str);
+
     int bit_len = str_length * LETTER_WIDTH;
 
     int row1BitsArray[NUMBER_ROWS];
