@@ -104,7 +104,20 @@ void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int 
       }
     }
   }
-//  printf("\n");
+}
+
+void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length){
+  int i,j,count;
+  for(i=0,count=0;i<NUMBER_ROWS;i++){
+    for(j=0;j<row_length;j++,count++){
+      if(j>=padding && j<32) {
+        int val = getBitL(messageString[(count-padding)/32], (count-padding)%32);
+        if(val) {
+          intBuffer[i] |= (0x80000000 >> j);
+        }
+      }
+    }
+  }
 }
 
 void fillStringIntBuffer(int *intBuffer, char* str){

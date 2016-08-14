@@ -18,6 +18,7 @@ void setBitL(int *buffer, int offset); //set the bit in the k-th position from t
 int  getBitL( int A, int k ); //get the bit in the k-th position from the left in A
 void getRows(int *buff, int buffsize, char *str);
 void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int row_length_in_bits); //fills a buffer that displays a whole panel
+void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length);
 void fillStringIntBuffer(int *intBuffer, char* str); // fills a fixed sized buffer with string contents 
 
 #endif // LCDMATRIX_H_

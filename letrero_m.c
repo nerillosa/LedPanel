@@ -2,7 +2,7 @@
 //
 // After installing bcm2835, you can build this
 // with something like:
-// gcc -o letrero -l rt letrero.c lcdmatrix.c -l bcm2835
+// gcc -o letrero -l rt letrero_m.c lcdmatrix.c -l bcm2835
 // sudo ./letrero
 //
 // Author: Neri Llosa (nerillosa@gmail.com)

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define NUMBER_ROWS 8
-#define ROW_INT_LENGTH 8  // each row can contain up to 256 bits (8 * sizeof(int) * 8 bits/byte) worth of text (42 letters max)
+#define ROW_INT_LENGTH 8  // each row can contain up to 8 ints of bits (8 * sizeof(int) * 8 bits/byte) worth of text (42 letters max)
 #define MAX_TEXT_LENGTH 42
 #define NUMBER_COLUMNS_PER_PANEL 32
 #define NUMBER_PANELS 1
@@ -67,6 +67,8 @@ void fillStringIntBuffer(int* intBuffer, char* str);
 
 void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int row_length); 
 
+void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length);
+
 int main(int argc, char **argv){
 	int intArrayBuffer[64];
 	memset(intArrayBuffer, 0, sizeof(intArrayBuffer));
@@ -94,8 +96,8 @@ int main(int argc, char **argv){
 
 	int panelIntArray[NUMBER_ROWS] = {0,0,0,0,0,0,0,0};
         
-        fillPanel(panelIntArray, intArrayBuffer, 12, bit_len);
-       
+	//        fillPanel(panelIntArray, intArrayBuffer, 12, bit_len);
+	padAndfillPanel(panelIntArray, intArrayBuffer, 12, bit_len);
 }
 
 void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int row_length){
@@ -113,6 +115,31 @@ void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int 
 
   printf("\n");
 }
+
+
+
+void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length){
+
+  int i,j,count;
+  for(i=0,count=0;i<NUMBER_ROWS;i++){
+    for(j=0;j<row_length;j++,count++){
+      if(j>=padding && j<32) {
+        int val = getBit(messageString[(count-padding)/32], (count-padding)%32);
+        if(val) {
+	  intBuffer[i] |= (0x80000000 >> j);
+          printf("1");
+	}else
+          printf(" ");
+      }
+      if(j<padding)
+	printf(" ");
+    }
+  printf("\n");
+  }
+
+}
+
+
 
 void fillStringIntBuffer(int *intBuffer, char* str){
 
