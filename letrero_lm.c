@@ -84,10 +84,13 @@ int main(int argc, char **argv)
     bcm2835_gpio_write(CLK, HIGH);
     bcm2835_gpio_write(LAT, LOW);
 
-    uint8_t a,b,c,k=0;
+    uint8_t a,b,c;
+    uint16_t k = 0;
+    uint8_t r2,b2,g2,clr = 0, cnt=0;;
     int i;
     int t = 0;
     int state = 0;
+
     while (1)
     {
 	bcm2835_gpio_write(OE, HIGH); //disable output
@@ -99,7 +102,7 @@ int main(int argc, char **argv)
         bcm2835_gpio_write(BB, b);
         bcm2835_gpio_write(CC, c);
 
-        if((k | 0x80) == 0xFF){ // shift once to the left every 128 cycles. k goes from 0-FF
+        if(k%64 == 0){ // shift once to the left every 128 cycles.
 	        if(state == 0){
                 	memset(row1BitsArray, 0, sizeof(row1BitsArray));
                		fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
@@ -117,8 +120,27 @@ int main(int argc, char **argv)
 		}
         }
 
+
+
+
         int row1Bits = row1BitsArray[k%8];
-        int row2Bits = row2BitsArray[k%8];
+	int row2Bits;
+
+	if(k & 512){
+		row2Bits = 0;
+                if(clr==1) clr=0;
+	}
+	else{
+                row2Bits = row2BitsArray[k%8];
+                if(clr==0){
+                   clr=1;
+		   cnt++;
+                   if(!(cnt & 7)) cnt++; //if 3 LSB bits are zero, increment
+		   r2 = (cnt & 1)? HIGH : LOW;
+		   g2 = (cnt & 4)? HIGH : LOW;
+		   b2 = (cnt & 2)? HIGH : LOW;
+		}
+	}
 
 	for(i=0;i<32;i++){
              	int yy = row1Bits & 0x80000000;
@@ -130,9 +152,13 @@ int main(int argc, char **argv)
 
                 yy = row2Bits & 0x80000000;
                 if(yy == 0){
-                        bcm2835_gpio_write(G2, LOW);
+                        bcm2835_gpio_write(R2, LOW);
+			bcm2835_gpio_write(G2, LOW);
+			bcm2835_gpio_write(B2, LOW);
                 }else{
-                        bcm2835_gpio_write(G2, HIGH);
+                        bcm2835_gpio_write(R2, r2);
+                        bcm2835_gpio_write(G2, g2);
+                        bcm2835_gpio_write(B2, b2);
                 }
 		row1Bits <<= 1;
 		row2Bits <<= 1;
