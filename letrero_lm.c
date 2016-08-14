@@ -35,8 +35,6 @@
 
 void toggleClock(void);
 void toggleLatch(void);
-void shiftLeft(int rowBits[NUMBER_ROWS]);
-void copyIntArrays(int *dest, int *src, int size);
 
 int main(int argc, char **argv)
 {
@@ -175,17 +173,3 @@ void toggleLatch(){
 
 }
 
-void shiftLeft(int rowBits[NUMBER_ROWS]){
-	int i;
-	for(i=0;i<NUMBER_ROWS;i++){
-
-		rowBits[i] =  rowBits[i] << 1 ;
-	}
-}
-
-void copyIntArrays(int *dest, int *src, int size){
-    int w;
-    for(w=0 ; w<size ; w++){
-        dest[w] = src[w];
-    }
-}
