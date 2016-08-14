@@ -88,6 +88,7 @@ int main(int argc, char **argv)
     uint8_t a,b,c,k=0;
     int i;
     int t = 0;
+    int state = 0;
     while (1)
     {
 	bcm2835_gpio_write(OE, HIGH); //disable output
@@ -100,14 +101,20 @@ int main(int argc, char **argv)
         bcm2835_gpio_write(CC, c);
 
         if((k | 0x80) == 0xFF){ // shift once to the left every 128 cycles. k goes from 0-FF
-	        //shiftLeft
-                memset(row1BitsArray, 0, sizeof(row1BitsArray));
-                fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
-
-                if(++t == bit_len){
-			t=0;
-                        memset(row1BitsArray, 0, sizeof(row1BitsArray));
-                        fillPanel(row1BitsArray, intArrayBuffer, 0, bit_len);
+	        if(state == 0){
+                	memset(row1BitsArray, 0, sizeof(row1BitsArray));
+               		fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
+                	if(++t == bit_len + 1){
+				t=0;
+                                state = 1;
+			}
+		}else{
+			memset(row1BitsArray, 0, sizeof(row1BitsArray));
+			padAndfillPanel(row1BitsArray, intArrayBuffer, 31 - t, bit_len);
+                        if(++t == 31){
+				t=0;
+				state = 0;
+			}
 		}
         }
 
@@ -124,9 +131,9 @@ int main(int argc, char **argv)
 
                 yy = row2Bits & 0x80000000;
                 if(yy == 0){
-                        bcm2835_gpio_write(B2, LOW);
+                        bcm2835_gpio_write(G2, LOW);
                 }else{
-                        bcm2835_gpio_write(B2, HIGH);
+                        bcm2835_gpio_write(G2, HIGH);
                 }
 		row1Bits <<= 1;
 		row2Bits <<= 1;

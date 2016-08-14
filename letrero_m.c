@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
     uint8_t a,b,c,k,t;
     int i;
-
+    int state = 0;
     while (1)
     {
 	bcm2835_gpio_write(OE, HIGH); //disable output

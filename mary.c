@@ -95,7 +95,7 @@ int main(int argc, char **argv){
 
 
 	int panelIntArray[NUMBER_ROWS] = {0,0,0,0,0,0,0,0};
-        
+
 	//        fillPanel(panelIntArray, intArrayBuffer, 12, bit_len);
 	padAndfillPanel(panelIntArray, intArrayBuffer, 12, bit_len);
 }
