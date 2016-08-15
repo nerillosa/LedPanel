@@ -1,7 +1,7 @@
 // letrero.c
-//
-// After installing bcm2835, you can build this
-// with something like:
+// Uses bcm2835, a fast GPIO C library by Mike McCauley. I just use the basic output functionality.
+// To install : http://www.raspberry-projects.com/pi/programming-in-c/io-pins/bcm2835-by-mike-mccauley
+// After installing bcm2835, you can build and run this with:
 // gcc -o letrero -l rt letrero.c lcdmatrix.c -l bcm2835
 // sudo ./letrero
 //
