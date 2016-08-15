@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     fillPanel(row1BitsArray, intArrayBuffer, 0, bit_len);
 
     int row2BitsArray[NUMBER_ROWS] = {0,0,0,0,0,0,0,0};
-    getRows(row2BitsArray, NUMBER_ROWS, "LIFE!");
+    getRows(row2BitsArray, NUMBER_ROWS, "VAMOS");
 
     // Set the pin to be an output
     bcm2835_gpio_fsel(AA, BCM2835_GPIO_FSEL_OUTP);
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
         bcm2835_gpio_write(BB, b);
         bcm2835_gpio_write(CC, c);
 
-        if(k%64 == 0){ // shift once to the left every 128 cycles.
+        if(k%64 == 0){ // shift once to the left every 64 cycles.
 	        if(state == 0){
                 	memset(row1BitsArray, 0, sizeof(row1BitsArray));
                		fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
@@ -179,9 +179,7 @@ int main(int argc, char **argv)
 }
 
 void toggleClock(){
-     // Turn it on
      bcm2835_gpio_write(CLK, LOW);
-     // wait a bit
      //delay(1);
      // turn it off
      bcm2835_gpio_write(CLK, HIGH);
@@ -190,9 +188,7 @@ void toggleClock(){
 }
 
 void toggleLatch(){
-     // Turn it on
      bcm2835_gpio_write(LAT, HIGH);
-     // wait a bit
 //     delay(1);
      // turn it off
      bcm2835_gpio_write(LAT, LOW);

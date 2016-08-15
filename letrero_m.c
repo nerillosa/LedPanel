@@ -31,8 +31,6 @@
 
 void toggleClock(void);
 void toggleLatch(void);
-void shiftLeft(int rowBits[NUMBER_ROWS]);
-void copyIntArrays(int *dest, int *src, int size);
 
 int main(int argc, char **argv)
 {
@@ -129,38 +127,19 @@ int main(int argc, char **argv)
 }
 
 void toggleClock(){
-     // Turn it on
      bcm2835_gpio_write(CLK, LOW);
      // wait a bit
      //delay(1);
-     // turn it off
      bcm2835_gpio_write(CLK, HIGH);
 //     delay(1);
 
 }
 
 void toggleLatch(){
-     // Turn it on
      bcm2835_gpio_write(LAT, HIGH);
-     // wait a bit
 //     delay(1);
-     // turn it off
      bcm2835_gpio_write(LAT, LOW);
 //     delay(1);
 
 }
 
-void shiftLeft(int rowBits[NUMBER_ROWS]){
-	int i;
-	for(i=0;i<NUMBER_ROWS;i++){
-
-		rowBits[i] =  rowBits[i] << 1 ;
-	}
-}
-
-void copyIntArrays(int *dest, int *src, int size){
-    int w;
-    for(w=0 ; w<size ; w++){
-        dest[w] = src[w];
-    }
-}

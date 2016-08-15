@@ -21,4 +21,7 @@ void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int 
 void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length);
 void fillStringIntBuffer(int *intBuffer, char* str); // fills a fixed sized buffer with string contents 
 
+void shiftLeft(int rowBits[NUMBER_ROWS]);
+void copyIntArrays(int *dest, int *src, int size);
+
 #endif // LCDMATRIX_H_
