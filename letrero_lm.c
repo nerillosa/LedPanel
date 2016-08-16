@@ -47,29 +47,26 @@ int main(int argc, char **argv)
 	return 1;
 
     char *str = "CUANDO ESTABA YO EN LA CARCEL YO SOLITO ME ENTRETENIA CONTANDO LOS ESLABONES QUE MI CADENA TENIA";
-    size_t str_length = strnlen(str, MAX_TEXT_LENGTH);
+    int str_length = strnlen(str, MAX_TEXT_LENGTH);
     int numInts = (str_length * LETTER_WIDTH * NUMBER_ROWS/(sizeof(int)*8) ) + 1;
-
-    int *intArrayBuffer = (int*)calloc(numInts, sizeof(int));
-
-
-    fillStringIntBuffer(intArrayBuffer , str);
-
     int bit_len = str_length * LETTER_WIDTH;
 
-    int row1BitsArray[NUMBER_ROWS];
+    int *intArrayBuffer = (int*)calloc(numInts, sizeof(int));
+    fillStringIntBuffer(intArrayBuffer , str); //save the string in-memory as bit encoded letters and spaces
+
+    int row1BitsArray[NUMBER_ROWS], row2BitsArray[NUMBER_ROWS];
     memset(row1BitsArray, 0, sizeof(row1BitsArray));
+    memset(row2BitsArray, 0, sizeof(row2BitsArray));
 
-    fillPanel(row1BitsArray, intArrayBuffer, 0, bit_len);
-
-    int row2BitsArray[NUMBER_ROWS] = {0,0,0,0,0,0,0,0};
-    getRows(row2BitsArray, NUMBER_ROWS, "VAMOS");
+    fillPanel(row1BitsArray, intArrayBuffer, 0, bit_len); //initialize first row of letters
+    getRows(row2BitsArray, NUMBER_ROWS, "VAMOS"); //initialize second row of letters
 
     gpio_init();
 
-    uint8_t a, b, c, r2, b2, g2, clr = 0, cnt=0;
-    uint16_t k = 0;
-    int i, t = 0, state = 0;
+    uint8_t a, b, c, r2, b2, g2, cnt=0;
+    uint16_t k = 0; // k is incremented after each loop. It is the heartbeat used as timer to blink and move left rates
+    int i, t = 0, state1 = 0, state2=0;
+    int row1Bits, row2Bits;
 
     while (1)
     {
@@ -83,34 +80,33 @@ int main(int argc, char **argv)
         bcm2835_gpio_write(CC, c);
 
         if(k%64 == 0){ // shift once to the left every 64 cycles.
-	        if(state == 0){
-                	memset(row1BitsArray, 0, sizeof(row1BitsArray));
+		memset(row1BitsArray, 0, sizeof(row1BitsArray));
+	        if(state1 == 0){
                		fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
                 	if(++t == bit_len + 1){
 				t=0;
-                                state = 1;
+                                state1 = 1;
 			}
 		}else{
-			memset(row1BitsArray, 0, sizeof(row1BitsArray));
 			padAndfillPanel(row1BitsArray, intArrayBuffer, 31 - t, bit_len);
                         if(++t == 31){
 				t=0;
-				state = 0;
+				state1 = 0;
 			}
 		}
         }
 
-        int row1Bits = row1BitsArray[k%8];
-	int row2Bits;
+        row1Bits = row1BitsArray[k%8];
 
-	if(k & 512){
+
+	if(k & 512){ // blink for 512 cycles on, 512 cycles off
 		row2Bits = 0;
-                if(clr==1) clr=0;
+                if(state2 == 1) state2 = 0;
 	}
 	else{
                 row2Bits = row2BitsArray[k%8];
-                if(clr==0){
-                   clr=1;
+                if(state2 == 0){
+                   state2 = 1;
 		   cnt++;
                    if(!(cnt & 7)) cnt++; //if 3 LSB bits are zero, increment
 		   r2 = (cnt & 1)? HIGH : LOW;
@@ -119,7 +115,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	for(i=0;i<32;i++){
+	for(i=0;i<32;i++){ // this for loop shifts 32 sets of 6 bits (R1,G1,B1,R2,G2,B2) into the panel, one set at a time with each clock pulse
              	int yy = row1Bits & 0x80000000;
            	if(yy == 0){
 			bcm2835_gpio_write(R1, LOW);
@@ -137,20 +133,18 @@ int main(int argc, char **argv)
                         bcm2835_gpio_write(G2, g2);
                         bcm2835_gpio_write(B2, b2);
                 }
-		row1Bits <<= 1;
-		row2Bits <<= 1;
-		toggleClock();
+		row1Bits <<= 1; // get the next bit
+		row2Bits <<= 1; // get the next bit
+		toggleClock(); // negative edge clock pulse
 	}
 
-        toggleLatch();
-        k++;
+        toggleLatch(); // once all bits are done shifting, this LAT control transfers the data bits to the LED drivers (a la D-FlipFlop)
+        k++; // heartbeat
 	bcm2835_gpio_write(OE, LOW); //enable output
 
         // give it a little time to display
         delay(1);
     }
-
-    //bcm2835_close();
 
     return 0;
 }
@@ -183,8 +177,7 @@ void gpio_init(){
 
 void toggleClock(){
      bcm2835_gpio_write(CLK, LOW);
-     //delay(1);
-     // turn it off
+//     delay(1);
      bcm2835_gpio_write(CLK, HIGH);
 //     delay(1);
 
@@ -193,7 +186,6 @@ void toggleClock(){
 void toggleLatch(){
      bcm2835_gpio_write(LAT, HIGH);
 //     delay(1);
-     // turn it off
      bcm2835_gpio_write(LAT, LOW);
 //     delay(1);
 
