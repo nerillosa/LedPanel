@@ -37,6 +37,7 @@
 #define BB  RPI_GPIO_P1_16
 #define CC  RPI_GPIO_P1_18
 
+void gpio_init(void);
 void toggleClock(void);
 void toggleLatch(void);
 
@@ -64,36 +65,11 @@ int main(int argc, char **argv)
     int row2BitsArray[NUMBER_ROWS] = {0,0,0,0,0,0,0,0};
     getRows(row2BitsArray, NUMBER_ROWS, "VAMOS");
 
-    // Set the pin to be an output
-    bcm2835_gpio_fsel(AA, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(BB, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(CC, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(R1, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(G1, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(B1, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(R2, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(G2, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(B2, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(CLK, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(OE, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_fsel(LAT, BCM2835_GPIO_FSEL_OUTP);
+    gpio_init();
 
-    bcm2835_gpio_write(R1, LOW);
-    bcm2835_gpio_write(B1, LOW);
-    bcm2835_gpio_write(G1, LOW);
-    bcm2835_gpio_write(R2, LOW);
-    bcm2835_gpio_write(B2, LOW);
-    bcm2835_gpio_write(G2, LOW);
-
-    bcm2835_gpio_write(CLK, HIGH);
-    bcm2835_gpio_write(LAT, LOW);
-
-    uint8_t a,b,c;
+    uint8_t a, b, c, r2, b2, g2, clr = 0, cnt=0;
     uint16_t k = 0;
-    uint8_t r2,b2,g2,clr = 0, cnt=0;;
-    int i;
-    int t = 0;
-    int state = 0;
+    int i, t = 0, state = 0;
 
     while (1)
     {
@@ -123,9 +99,6 @@ int main(int argc, char **argv)
 			}
 		}
         }
-
-
-
 
         int row1Bits = row1BitsArray[k%8];
 	int row2Bits;
@@ -180,6 +153,32 @@ int main(int argc, char **argv)
     //bcm2835_close();
 
     return 0;
+}
+
+void gpio_init(){
+    // Set the pin to be an output
+    bcm2835_gpio_fsel(AA, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(BB, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(CC, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(R1, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(G1, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(B1, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(R2, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(G2, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(B2, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(CLK, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(OE, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(LAT, BCM2835_GPIO_FSEL_OUTP);
+
+    bcm2835_gpio_write(R1, LOW);
+    bcm2835_gpio_write(B1, LOW);
+    bcm2835_gpio_write(G1, LOW);
+    bcm2835_gpio_write(R2, LOW);
+    bcm2835_gpio_write(B2, LOW);
+    bcm2835_gpio_write(G2, LOW);
+
+    bcm2835_gpio_write(CLK, HIGH);
+    bcm2835_gpio_write(LAT, LOW);
 }
 
 void toggleClock(){
