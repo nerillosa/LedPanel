@@ -1,7 +1,7 @@
 #ifndef LCDMATRIX_H_   /* Include guard */
 #define LCDMATRIX_H_
 
-#define NUMBER_PANELS 1
+#define NUMBER_PANELS 2
 #define LETTER_WIDTH 6
 #define NUMBER_ROWS 8
 #define NUMBER_COLUMNS_PER_PANEL 32

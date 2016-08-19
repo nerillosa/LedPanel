@@ -46,12 +46,12 @@ int main(int argc, char **argv)
     if (!bcm2835_init())
 	return 1;
 
-    char *str1 = "ROSITA DE MI AMOR MIO";
+    char *str1 = "THE LIFE OF THE ARTIST IS DIFFICULT";
     int str_length1 = strnlen(str1, MAX_TEXT_LENGTH);
     int numInts1 = (str_length1 * LETTER_WIDTH * NUMBER_ROWS/(INT_BITS)) + 1;
     int bit_len1 = str_length1 * LETTER_WIDTH;
 
-    char *str2 = "VAMOS PERU";
+    char *str2 = "VAMOS PERU!";
     int str_length2 = strnlen(str2, MAX_TEXT_LENGTH);
     int numInts2 = (str_length2 * LETTER_WIDTH * NUMBER_ROWS/(INT_BITS)) + 1;
     int bit_len2 = str_length2 * LETTER_WIDTH;
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     int blankPanel[NUMBER_PANELS];
     memset(blankPanel, 0, sizeof(blankPanel));
 
-    while (1)
+    while (1) //infinite loop
     {
 	bcm2835_gpio_write(OE, HIGH); //disable output
 
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 	}
 
 	for(i=0;i<NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;i++){ // this for loop shifts 32 sets of 6 bits (R1,G1,B1,R2,G2,B2) into the panel, one set at a time with each clock pulse
-             	int yy = *(row1Bits + i/(INT_BITS)) << i;
+             	int yy = *(row1Bits + i/(INT_BITS)) << (i%32);
                 yy &= 0x80000000;
            	if(yy == 0){
 			bcm2835_gpio_write(R1, LOW);
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 			bcm2835_gpio_write(R1, HIGH);
 		}
 
-                yy = *(row2Bits + i/(INT_BITS)) << i;
+                yy = *(row2Bits + i/(INT_BITS)) << (i%32);
                 yy &= 0x80000000;
                 if(yy == 0){
                         bcm2835_gpio_write(R2, LOW);

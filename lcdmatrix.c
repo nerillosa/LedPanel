@@ -114,12 +114,10 @@ void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int 
         int val = getBitL(messageString[count/(INT_BITS)], count%(INT_BITS));
         if(val){
 	    	intBuffer[(NUMBER_PANELS *i)+ (k/(INT_BITS))] |= (0x80000000 >> (k%(INT_BITS)));
-	    	//printf("1");
-		}//else printf(" ");
+	}
         k++;
       }
     }
-    //printf("\n");
   }
 }
 
@@ -150,17 +148,12 @@ void fillStringIntBuffer(int *intBuffer, char* str){
                 for(j=0;j<str_length;j++){ // for each letter
                         uint8_t (*arr)[LETTER_WIDTH] = (uint8_t (*)[LETTER_WIDTH]) text[j];
                         for(m=0;m<LETTER_WIDTH;m++){
-                                // if(count && count%6 == 0) printf(" ");
                                 if(arr[z][m]){
                                         setBitL(intBuffer, count);
-                                        // printf(ANSI_COLOR_GREEN   "1");
-                                }else{
-                                        // printf(" ");
                                 }
                                 count++;
                         }
                 }
-                // printf(ANSI_COLOR_RESET  "\n");
         }
 }
 
