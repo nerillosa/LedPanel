@@ -46,27 +46,37 @@ int main(int argc, char **argv)
     if (!bcm2835_init())
 	return 1;
 
-    char *str = "CUANDO ESTABA YO EN LA CARCEL YO SOLITO ME ENTRETENIA CONTANDO LOS ESLABONES QUE MI CADENA TENIA";
-    int str_length = strnlen(str, MAX_TEXT_LENGTH);
-    int numInts = (str_length * LETTER_WIDTH * NUMBER_ROWS/(sizeof(int)*8) ) + 1;
-    int bit_len = str_length * LETTER_WIDTH;
+    char *str1 = "ROSITA DE MI AMOR MIO";
+    int str_length1 = strnlen(str1, MAX_TEXT_LENGTH);
+    int numInts1 = (str_length1 * LETTER_WIDTH * NUMBER_ROWS/(INT_BITS)) + 1;
+    int bit_len1 = str_length1 * LETTER_WIDTH;
 
-    int *intArrayBuffer = (int*)calloc(numInts, sizeof(int));
-    fillStringIntBuffer(intArrayBuffer , str); //save the string in-memory as bit encoded letters and spaces
+    char *str2 = "VAMOS PERU";
+    int str_length2 = strnlen(str2, MAX_TEXT_LENGTH);
+    int numInts2 = (str_length2 * LETTER_WIDTH * NUMBER_ROWS/(INT_BITS)) + 1;
+    int bit_len2 = str_length2 * LETTER_WIDTH;
 
-    int row1BitsArray[NUMBER_ROWS], row2BitsArray[NUMBER_ROWS];
+    int *intArrayBuffer1 = (int*)calloc(numInts1, sizeof(int));
+    fillStringIntBuffer(intArrayBuffer1 , str1); //save the string in-memory as bit encoded letters and spaces
+
+    int *intArrayBuffer2 = (int*)calloc(numInts2, sizeof(int));
+    fillStringIntBuffer(intArrayBuffer2 , str2); //save the string in-memory as bit encoded letters and spaces
+
+    int row1BitsArray[NUMBER_ROWS * NUMBER_PANELS], row2BitsArray[NUMBER_ROWS * NUMBER_PANELS];
     memset(row1BitsArray, 0, sizeof(row1BitsArray));
     memset(row2BitsArray, 0, sizeof(row2BitsArray));
 
-    fillPanel(row1BitsArray, intArrayBuffer, 0, bit_len); //initialize first row of letters
-    getRows(row2BitsArray, NUMBER_ROWS, "VAMOS"); //initialize second row of letters
+    fillPanel(row1BitsArray, intArrayBuffer1, 0, bit_len1); //initialize first row of letters
+    fillPanel(row2BitsArray, intArrayBuffer2, 0, bit_len2); //initialize second row of letters
 
     gpio_init();
 
     uint8_t a, b, c, r2, b2, g2, cnt=0;
     uint16_t k = 0; // k is incremented after each loop. It is the heartbeat used as timer to blink and move left rates
     int i, t = 0, state1 = 0, state2=0;
-    int row1Bits, row2Bits;
+    int *row1Bits, *row2Bits;
+    int blankPanel[NUMBER_PANELS];
+    memset(blankPanel, 0, sizeof(blankPanel));
 
     while (1)
     {
@@ -82,29 +92,29 @@ int main(int argc, char **argv)
         if(k%64 == 0){ // shift once to the left every 64 cycles.
 		memset(row1BitsArray, 0, sizeof(row1BitsArray));
 	        if(state1 == 0){
-               		fillPanel(row1BitsArray, intArrayBuffer, t, bit_len);
-                	if(++t == bit_len + 1){
+               		fillPanel(row1BitsArray, intArrayBuffer1, t, bit_len1);
+                	if(++t == bit_len1 + 1){
 				t=0;
                                 state1 = 1;
 			}
 		}else{
-			padAndfillPanel(row1BitsArray, intArrayBuffer, 31 - t, bit_len);
-                        if(++t == 31){
+			padAndfillPanel(row1BitsArray, intArrayBuffer1, NUMBER_COLUMNS_PER_PANEL -1 - t, bit_len1);
+                        if(++t == NUMBER_COLUMNS_PER_PANEL -1){
 				t=0;
 				state1 = 0;
 			}
 		}
         }
 
-        row1Bits = row1BitsArray[k%8];
+        row1Bits = &row1BitsArray[NUMBER_PANELS*(k%8)];
 
 
 	if(k & 512){ // blink for 512 cycles on, 512 cycles off
-		row2Bits = 0;
+		row2Bits = blankPanel;
                 if(state2 == 1) state2 = 0;
 	}
 	else{
-                row2Bits = row2BitsArray[k%8];
+                row2Bits = &row2BitsArray[NUMBER_PANELS*(k%8)];
                 if(state2 == 0){
                    state2 = 1;
 		   cnt++;
@@ -115,15 +125,17 @@ int main(int argc, char **argv)
 		}
 	}
 
-	for(i=0;i<32;i++){ // this for loop shifts 32 sets of 6 bits (R1,G1,B1,R2,G2,B2) into the panel, one set at a time with each clock pulse
-             	int yy = row1Bits & 0x80000000;
+	for(i=0;i<NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;i++){ // this for loop shifts 32 sets of 6 bits (R1,G1,B1,R2,G2,B2) into the panel, one set at a time with each clock pulse
+             	int yy = *(row1Bits + i/(INT_BITS)) << i;
+                yy &= 0x80000000;
            	if(yy == 0){
 			bcm2835_gpio_write(R1, LOW);
 		}else{
 			bcm2835_gpio_write(R1, HIGH);
 		}
 
-                yy = row2Bits & 0x80000000;
+                yy = *(row2Bits + i/(INT_BITS)) << i;
+                yy &= 0x80000000;
                 if(yy == 0){
                         bcm2835_gpio_write(R2, LOW);
 			bcm2835_gpio_write(G2, LOW);
@@ -133,8 +145,6 @@ int main(int argc, char **argv)
                         bcm2835_gpio_write(G2, g2);
                         bcm2835_gpio_write(B2, b2);
                 }
-		row1Bits <<= 1; // get the next bit
-		row2Bits <<= 1; // get the next bit
 		toggleClock(); // negative edge clock pulse
 	}
 
