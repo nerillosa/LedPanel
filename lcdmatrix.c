@@ -1,6 +1,7 @@
 #include "lcdmatrix.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 uint8_t _A[8][6] = {{0,0,1,0,0,0},{0,1,0,1,0,0},{1,0,0,0,1,0},{1,1,1,1,1,0},{1,0,0,0,1,0},{1,0,0,0,1,0},{1,0,0,0,1,0},{0,0,0,0,0,0}};
 uint8_t _B[8][6] = {{1,1,1,1,0,0},{1,0,0,0,1,0},{1,0,0,0,1,0},{1,1,1,1,0,0},{1,0,0,0,1,0},{1,0,0,0,1,0},{1,1,1,1,0,0},{0,0,0,0,0,0}};
@@ -109,25 +110,27 @@ void fillPanel(int* intBuffer, int* messageString, int messageStringOffset, int 
   int i,j,k,count;
   for(i=0,count=0;i<NUMBER_ROWS;i++){
     for(j=0,k=0;j<row_length_in_bits;j++,count++){
-      if((messageStringOffset==0 || j/messageStringOffset > 0) && k < 32 ){
-        int val = getBitL(messageString[count/32], count%32);
+      if((messageStringOffset==0 || j/messageStringOffset > 0) && k < NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL ){
+        int val = getBitL(messageString[count/(INT_BITS)], count%(INT_BITS));
         if(val){
-	    intBuffer[i] |= (0x80000000 >> k);
-	}
+	    	intBuffer[(NUMBER_PANELS *i)+ (k/(INT_BITS))] |= (0x80000000 >> (k%(INT_BITS)));
+	    	//printf("1");
+		}//else printf(" ");
         k++;
       }
     }
+    //printf("\n");
   }
 }
 
-void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length){
+void padAndfillPanel(int* intBuffer, int* messageString, int padding, int row_length_in_bits){
   int i,j,count;
   for(i=0,count=0;i<NUMBER_ROWS;i++){
-    for(j=0;j<row_length;j++,count++){
-      if(j>=padding && j<32) {
-        int val = getBitL(messageString[(count-padding)/32], (count-padding)%32);
+    for(j=0;j<row_length_in_bits;j++,count++){
+      if(j>=padding && j<NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL) {
+        int val = getBitL(messageString[(count-padding)/(INT_BITS)], (count-padding)%(INT_BITS));
         if(val) {
-          intBuffer[i] |= (0x80000000 >> j);
+          intBuffer[(NUMBER_PANELS *i) + (j/(INT_BITS))] |= (0x80000000 >> (j%(INT_BITS)));
         }
       }
     }
