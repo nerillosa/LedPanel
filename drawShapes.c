@@ -39,9 +39,11 @@
 #define NUMBER_ROWS 16
 #define NUMBER_COLUMNS_PER_PANEL 32
 
+static int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
+static int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
+
 typedef enum {false=0,true} bool;
 typedef enum {blue=1,green,cyan,red,magenta,yellow,white} color;
-
 
 void gpio_init(void);
 void toggleClock(void);
@@ -49,19 +51,16 @@ void toggleLatch(void);
 void displayRowInit(uint8_t count);
 void displayRowEnd(void);
 
-static int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
-static int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
-
 void drawPixel(int x, int y, color c, uint8_t *display){
 	int offset = y * TOTAL_NUMBER_COLUMNS + x;
-	if(offset < PANEL_SIZE)
+	if(offset >= 0 && offset < PANEL_SIZE)
 		*(display + offset) = c;
 }
 
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display){
 	int i, offset = y * TOTAL_NUMBER_COLUMNS + x;
 	for(i=0;i<width;i++){
-		if((offset + i) < PANEL_SIZE)
+		if((offset + i) >= 0 && (offset + i) < PANEL_SIZE)
 			*(display + offset + i) = c;
 	}
 }
@@ -70,7 +69,7 @@ void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
 	int i, j, offset = y * TOTAL_NUMBER_COLUMNS + x;
 	for(i=0;i<height;i++){
 		j = offset + i * TOTAL_NUMBER_COLUMNS;
-		if(j < PANEL_SIZE)
+		if(j >= 0 && j < PANEL_SIZE)
 			*(display + j) = c;
 	}
 }
@@ -128,8 +127,6 @@ int main(int argc, char **argv)
 		drawCircle(7+9*w, 7, 15, w+1, row1BitsArray);
 	}
 
-
-
 	gpio_init();
 
 	uint8_t val;
@@ -157,13 +154,9 @@ int main(int argc, char **argv)
 
 			toggleClock(); // negative edge clock pulse
 		}
-
 		count++; // heartbeat
-
 		displayRowEnd();
 	}
-
-	return 0;
 }
 
 void gpio_init(){
