@@ -9,6 +9,7 @@ Each panel has a total of 12 control pins:
 * R1,G1,B1,R2,G2,B2. These are the color inputs for each LED. R1,G1,B1 control rows 1-8. R2,G2,B2 control rows 9-16. This makes it easy to divide the screen into two independent lines of text.
 * OE, CLK, and LAT. These are pure control. The OE (output enable) enables/disables display when changing row group. It enables output with a LOW value. CLK is the Clock. This works on the negative edge and is used to shift the data inputs (R1,G1,B1,R2,G2,B2) 32 times for each row.
 LAT is the Latch control. Once all shifts have been done for a row, this signals the panel to transfer the input data bits to the display output.
+
 ## Code Example
 
 Show what the library does as concisely as possible, developers should be able to figure out **how** your project solves their problem by looking at the code example. Make sure the API you are showing off is obvious, and that your code is short and concise.
