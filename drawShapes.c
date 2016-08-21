@@ -42,14 +42,20 @@
 static int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 static int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 
+uint8_t *displayArray, moveOffset=7;
+
+
 typedef enum {false=0,true} bool;
 typedef enum {blue=1,green,cyan,red,magenta,yellow,white} color;
 
-void gpio_init(void);
+int  gpio_init(void);
 void toggleClock(void);
 void toggleLatch(void);
 void displayRowInit(uint8_t count);
 void displayRowEnd(void);
+void updateRows(uint16_t count);
+void panelInitDraw(void);
+void repaint(uint16_t count);
 
 void drawPixel(int x, int y, color c, uint8_t *display){
 	int offset = y * TOTAL_NUMBER_COLUMNS + x;
@@ -113,53 +119,86 @@ void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){
 	}
 }
 
+void drawSmileyFace(int x, int y, int diameter, uint8_t *display){
+
+	drawCircle(x, y, diameter, yellow, display);
+
+	//mouth
+	drawHorizontalLine(x-2, y+4, 5, red, display);
+	drawPixel(x-3,y+3,red, display);
+	drawPixel(x+3,y+3,red, display);
+
+	//eyes
+	drawHorizontalLine(x-3, y-3, 2, blue, display);
+	drawHorizontalLine(x+2, y-3, 2, blue, display);
+
+	//nose
+	drawPixel(x, y-1, green, display);
+	drawHorizontalLine(x-1, y, 3, green, display);
+}
+
+
 static uint8_t a, b, c; //These will define the current row(s) being displayed
 
 int main(int argc, char **argv)
 {
-	if (!bcm2835_init())
+	if (gpio_init())
 		return 1;
 
-	// 1 Kbyte
-	uint8_t *row1BitsArray = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
-	int w;
-	for(w=0;w<7;w++){
-		drawCircle(7+9*w, 7, 15, w+1, row1BitsArray);
-	}
+	displayArray = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
+	panelInitDraw();
 
-	gpio_init();
-
-	uint8_t val;
 	uint16_t count = 0;
-	int i;
 
 	while (1) //infinite loop
 	{
-		//two rows are displayed on each iteration
 		displayRowInit(count);
-
-		uint8_t *row1 = row1BitsArray + (count%8 * TOTAL_NUMBER_COLUMNS);
-		uint8_t *row2 = row1BitsArray + ((count%8 + 8) * TOTAL_NUMBER_COLUMNS);
-
-		for(i=0;i<TOTAL_NUMBER_COLUMNS;i++){
-			val = *(row1+i);
-			bcm2835_gpio_write(R1, ((val & 4)? HIGH : LOW));
-			bcm2835_gpio_write(G1, ((val & 2)? HIGH : LOW));
-			bcm2835_gpio_write(B1, ((val & 1)? HIGH : LOW));
-
-			val = *(row2+i);
-			bcm2835_gpio_write(R2, ((val & 4)? HIGH : LOW));
-			bcm2835_gpio_write(G2, ((val & 2)? HIGH : LOW));
-			bcm2835_gpio_write(B2, ((val & 1 )? HIGH : LOW));
-
-			toggleClock(); // negative edge clock pulse
-		}
-		count++; // heartbeat
+		repaint(count);
+		updateRows(count);
 		displayRowEnd();
+
+		count++;
 	}
 }
 
-void gpio_init(){
+void repaint(uint16_t count){
+	if(count%64 == 0){ // shift once to the left every 64 cycles.
+		memset(displayArray, 0, PANEL_SIZE);
+		if(++moveOffset == TOTAL_NUMBER_COLUMNS) moveOffset=0;
+		drawSmileyFace(moveOffset + 7, 8, 15, displayArray);
+	}
+}
+
+void panelInitDraw(){
+	drawSmileyFace(7, 8, 15, displayArray);
+}
+
+void updateRows(uint16_t count){
+
+	uint8_t *row1 = displayArray + (count%8 * TOTAL_NUMBER_COLUMNS);
+	uint8_t *row2 = displayArray + ((count%8 + 8) * TOTAL_NUMBER_COLUMNS);
+	int i;
+	uint8_t val;
+	for(i=0;i<TOTAL_NUMBER_COLUMNS;i++){
+		val = *(row1+i);
+		bcm2835_gpio_write(R1, ((val & 4)? HIGH : LOW));
+		bcm2835_gpio_write(G1, ((val & 2)? HIGH : LOW));
+		bcm2835_gpio_write(B1, ((val & 1)? HIGH : LOW));
+
+		val = *(row2+i);
+		bcm2835_gpio_write(R2, ((val & 4)? HIGH : LOW));
+		bcm2835_gpio_write(G2, ((val & 2)? HIGH : LOW));
+		bcm2835_gpio_write(B2, ((val & 1 )? HIGH : LOW));
+
+		toggleClock(); // negative edge clock pulse
+	}
+}
+
+int gpio_init(){
+
+	if (!bcm2835_init())
+		return 1;
+
 	// Set the pin to be an output
 	bcm2835_gpio_fsel(AA, BCM2835_GPIO_FSEL_OUTP);
 	bcm2835_gpio_fsel(BB, BCM2835_GPIO_FSEL_OUTP);
@@ -183,11 +222,14 @@ void gpio_init(){
 
 	bcm2835_gpio_write(CLK, HIGH);
 	bcm2835_gpio_write(LAT, LOW);
+
+	return 0;
 }
 
 void toggleClock(){
 	bcm2835_gpio_write(CLK, LOW);
 	bcm2835_gpio_write(CLK, HIGH);
+	//delay(1);
 }
 
 void displayRowInit(uint8_t count){
@@ -208,5 +250,5 @@ void displayRowEnd(){
 	bcm2835_gpio_write(OE, LOW); //enable output
 
 	// give it a little time to display
-	delay(2);
+	delay(1);
 }
