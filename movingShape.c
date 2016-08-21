@@ -43,11 +43,11 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas){
-	if(count%128 == 0){ // shift once to the left every 128 cycles.
-		memset(canvas, 0, PANEL_SIZE);
+	if(count%128 == 0){ // shift once to the right every 128 cycles.
+		memset(canvas, 0, PANEL_SIZE); // clear the canvas
 		if(++*moveOffset == (TOTAL_NUMBER_COLUMNS))
 			*moveOffset = 0;
-		drawSmileyFace(*moveOffset + 7, 8, 15, canvas);
+		drawSmileyFace(*moveOffset + 7, 8, 15, canvas); // smile!
 	}
 }
 
