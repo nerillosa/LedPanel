@@ -21,7 +21,7 @@
 
 #include "lcdshapes.h"
 
-void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *displayArray);
+void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas);
 
 int main(int argc, char **argv)
 {
@@ -42,12 +42,12 @@ int main(int argc, char **argv)
 	}
 }
 
-void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *displayArray){
+void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas){
 	if(count%128 == 0){ // shift once to the left every 128 cycles.
-		memset(displayArray, 0, PANEL_SIZE);
+		memset(canvas, 0, PANEL_SIZE);
 		if(++*moveOffset == (TOTAL_NUMBER_COLUMNS))
 			*moveOffset = 0;
-		drawSmileyFace(*moveOffset + 7, 8, 15, displayArray);
+		drawSmileyFace(*moveOffset + 7, 8, 15, canvas);
 	}
 }
 
