@@ -1,12 +1,13 @@
-// drawShapes.c
+// movingSmileyFace.c
+//
 // Uses bcm2835, a fast GPIO C library by Mike McCauley. I just use the basic output functionality.
 // To install : http://www.raspberry-projects.com/pi/programming-in-c/io-pins/bcm2835-by-mike-mccauley
 //
-// Standalone program that writes basic shapes. Work in progress...
+// Standalone program that shows a smiley face moving to the right
 //
 // After installing bcm2835, you can build and run this with:
-// gcc -o letrero -l rt drawShapes.c -l bcm2835
-// sudo ./letrero
+// gcc -o smiley -l rt movingSmileyFace.c -l bcm2835
+// sudo ./smiley
 //
 // Author: Neri Llosa (nerillosa@gmail.com)
 // Copyright (C) 2016 Neri Llosa
@@ -42,7 +43,7 @@
 static int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 static int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 
-uint8_t *displayArray, moveOffset=7;
+uint8_t *displayArray, moveOffset=0;
 
 
 typedef enum {false=0,true} bool;
@@ -54,28 +55,29 @@ void toggleLatch(void);
 void displayRowInit(uint8_t count);
 void displayRowEnd(void);
 void updateRows(uint16_t count);
-void panelInitDraw(void);
-void repaint(uint16_t count);
+void paintCanvas(uint16_t count);
 
 void drawPixel(int x, int y, color c, uint8_t *display){
+	if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
 	int offset = y * TOTAL_NUMBER_COLUMNS + x;
-	if(offset >= 0 && offset < PANEL_SIZE)
-		*(display + offset) = c;
+	*(display + offset) = c;
 }
 
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display){
+	if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || width <=0) return; //sanity check
 	int i, offset = y * TOTAL_NUMBER_COLUMNS + x;
 	for(i=0;i<width;i++){
-		if((offset + i) >= 0 && (offset + i) < PANEL_SIZE)
+		if((offset + i) >= y*TOTAL_NUMBER_COLUMNS && (offset + i) < (y+1)*TOTAL_NUMBER_COLUMNS) // keep it in the same row
 			*(display + offset + i) = c;
 	}
 }
 
 void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
+	if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || height <=0) return; //sanity check
 	int i, j, offset = y * TOTAL_NUMBER_COLUMNS + x;
 	for(i=0;i<height;i++){
 		j = offset + i * TOTAL_NUMBER_COLUMNS;
-		if(j >= 0 && j < PANEL_SIZE)
+		if(j >= 0 && j < PANEL_SIZE) // safety check just in case
 			*(display + j) = c;
 	}
 }
@@ -96,7 +98,6 @@ void drawRectangle(int x, int y, int width, int height, color c, uint8_t *displa
 }
 
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){
-
 	if(diameter == 15){
 		drawVerticalLine(x-7, y-2, 5, c, display);
 		drawVerticalLine(x+7, y-2, 5, c, display);
@@ -120,7 +121,6 @@ void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){
 }
 
 void drawSmileyFace(int x, int y, int diameter, uint8_t *display){
-
 	drawCircle(x, y, diameter, yellow, display);
 
 	//mouth
@@ -146,31 +146,26 @@ int main(int argc, char **argv)
 		return 1;
 
 	displayArray = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
-	panelInitDraw();
 
 	uint16_t count = 0;
 
 	while (1) //infinite loop
 	{
 		displayRowInit(count);
-		repaint(count);
+		paintCanvas(count);
 		updateRows(count);
 		displayRowEnd();
-
 		count++;
 	}
 }
 
-void repaint(uint16_t count){
-	if(count%64 == 0){ // shift once to the left every 64 cycles.
+void paintCanvas(uint16_t count){
+	if(count%128 == 0){ // shift once to the left every 128 cycles.
 		memset(displayArray, 0, PANEL_SIZE);
-		if(++moveOffset == TOTAL_NUMBER_COLUMNS) moveOffset=0;
+		if(++moveOffset == (TOTAL_NUMBER_COLUMNS)) 
+			moveOffset = 0;
 		drawSmileyFace(moveOffset + 7, 8, 15, displayArray);
 	}
-}
-
-void panelInitDraw(){
-	drawSmileyFace(7, 8, 15, displayArray);
 }
 
 void updateRows(uint16_t count){
