@@ -2,7 +2,7 @@
 Moving Message LED Panel programming code and setup instructions.
 ## Synopsis
 This projects describes how to put together LED panels and control them using a Raspberry Pi. The panels I am using are from adafruit.com and you can view their full description here: https://www.adafruit.com/products/420 .
-In a nutshell, they are the so-called "1/8 scanning" panels. Pixels are divided in groups of 8 and are rendered one group at a time. The panels are 16x32 (16 rows and 32 columns). The 8 groups are arranged in rows: 1st and 9th, 2nd and 10th, 3rd and 11th, ..., 8th and 16th.
+In a nutshell, they are the so-called "1/8 scanning" panels. Pixels are divided in groups of 8 and are rendered one group at a time. The panels are 16x32 (16 rows and 32 columns). For this project, I am using two of them connected in series (one's ouptut connects to the others input). You can also test with onley one panel. The 8 groups are arranged in rows: 1st and 9th, 2nd and 10th, 3rd and 11th, ..., 8th and 16th.
 Each LED is basically 3 LEDS in one, as it has RGB components. This amounts to 16x32x3 = 1536 LEDS.
 Each panel has a total of 12 control pins:
 * A, B, and C. These 3 inputs define the current row group. 000-111 
