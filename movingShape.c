@@ -37,7 +37,6 @@ int main(int argc, char **argv)
 		displayRowInit(count);
 		paintCanvas(count,&moveOffset, canvas);
 		updateRows(count, canvas);
-		displayRowEnd();
 		count++;
 	}
 }

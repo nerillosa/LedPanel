@@ -106,6 +106,7 @@ void updateRows(uint16_t count, uint8_t *displayArray){
 
                 toggleClock(); // negative edge clock pulse
         }
+	displayRowEnd();
 }
 
 int gpio_init(){
@@ -157,7 +158,7 @@ void displayRowInit(uint8_t count){
         bcm2835_gpio_write(CC, c);
 }
 
-void displayRowEnd(){
+static void displayRowEnd(){
         // once all bits are done shifting, this LAT control transfers the data bits to the LED drivers (a la D-FlipFlop)
         bcm2835_gpio_write(LAT, HIGH);
         bcm2835_gpio_write(LAT, LOW);
