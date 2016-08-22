@@ -8,7 +8,7 @@ Each panel has a total of 12 control pins:
 * A, B, and C. These 3 inputs define the current row group. 000-111 
 * R1,G1,B1,R2,G2,B2. These are the color inputs for each LED. R1,G1,B1 control rows 1-8. R2,G2,B2 control rows 9-16. This makes it easy to divide the screen into two independent lines of text.
 * OE, CLK, and LAT. These are pure control. The OE (output enable) enables/disables display when changing row group. It enables output with a LOW value. CLK is the Clock. This works on the negative edge and is used to shift the data inputs (R1,G1,B1,R2,G2,B2) 32 (or 64 if you have two panels connected together) times for each row.
-LAT is the Latch control. Once all shifts have been done for a row, this signals the panel to transfer the input data bits to the display output. Following is a diagram of the connections necessary to make this work. GPIO outputs do not necessarily have to be the ones depicted. Any free output port will do. The LED panel connector also has 3 GND pins and a D pin. All of them should be connected to the Raspberry Pi ground. The D pin is for 32x32 panels and is not used.  
+LAT is the Latch control. Once all shifts have been done for a row, this signals the panel to transfer the input data bits to the display output. Following is a diagram of the connections necessary to make this work. GPIO outputs do not necessarily have to be the ones depicted. Any free output port will do, just make sure you change the corresponding #define definitions in the header files. The LED panel connector also has 3 GND pins and a D pin. All of them should be connected to the Raspberry Pi ground. The D pin is for 32x32 panels and is not used.  
 
 ![Alt text](images/connections.jpg?raw=true "Connections")
 
