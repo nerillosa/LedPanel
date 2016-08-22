@@ -11,6 +11,9 @@ Each panel has a total of 12 control pins:
 LAT is the Latch control. Once all shifts have been done for a row, this signals the panel to transfer the input data bits to the display output. Following is a diagram of the connections necessary to make this work. GPIO outputs do not necessarily have to be the ones depicted. Any free output port will do. The LED panel connector also has 3 GND pins and a D pin. All of them should be connected to the Raspberry Pi ground. The D pin is for 32x32 panels and is not used.  
 
 ![Alt text](images/connections.jpg?raw=true "Connections")
+
+![Alt text](images/connections2.jpg?raw=true "Connections2")
+
 ## Code Example
 
 Show what the library does as concisely as possible, developers should be able to figure out **how** your project solves their problem by looking at the code example. Make sure the API you are showing off is obvious, and that your code is short and concise.
