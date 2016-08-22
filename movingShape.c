@@ -1,4 +1,4 @@
-// movingSmileyFace.c
+// movingShape.c
 //
 // Uses bcm2835, a fast GPIO C library by Mike McCauley. I just use the basic output functionality.
 // To install : http://www.raspberry-projects.com/pi/programming-in-c/io-pins/bcm2835-by-mike-mccauley
