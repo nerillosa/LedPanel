@@ -16,8 +16,45 @@ LAT is the Latch control. Once all shifts have been done for a row, this signals
 
 ## Code Example
 
-Show what the library does as concisely as possible, developers should be able to figure out **how** your project solves their problem by looking at the code example. Make sure the API you are showing off is obvious, and that your code is short and concise.
+This is example code from movingShape.c. It depicts a smiley face running continuously from left to right. The code is very concise and the programming reduces to implementing the paintCanvas() function for your particular shape (smiley in this case). All the constants and draw shape functions are defined in lcdshapes.c. The advantage of this project is that you get to see a and understand all the coding involved as there are no "hidden" libraries that you have no clue how they work.
 
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+
+#include "lcdshapes.h"
+
+void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas);
+
+int main(int argc, char **argv)
+{
+	if (gpio_init())
+		return 1;
+
+	uint8_t *canvas = (uint8_t *)malloc(PANEL_SIZE * sizeof(uint8_t));
+
+	uint16_t count = 0, moveOffset = 0;
+
+	while (1) //infinite loop
+	{
+		displayRowInit(count);
+		paintCanvas(count,&moveOffset, canvas);
+		updateRows(count, canvas);
+		count++;
+	}
+}
+
+void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas){
+	if(count%128 == 0){ // shift once to the right every 128 cycles.
+		memset(canvas, 0, PANEL_SIZE); // clear the canvas
+		if(++*moveOffset == (TOTAL_NUMBER_COLUMNS))
+			*moveOffset = 0;
+		drawSmileyFace(*moveOffset + 7, 8, 15, canvas); // smile!
+	}
+}
+```
 ## Motivation
 
 A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
