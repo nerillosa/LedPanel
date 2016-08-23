@@ -14,6 +14,7 @@
 // Author: Neri Llosa (nerillosa@gmail.com)
 // Copyright (C) 2016 Neri Llosa
 
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,28 +22,36 @@
 
 #include "lcdshapes.h"
 
-void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas);
+#define MOVE_INTERVAL  150  // time in milliseconds between each move
+
+void paintCanvas(uint16_t *moveOffset, uint8_t *canvas);
+
+struct timeval saved; //last move right time
 
 int main(int argc, char **argv)
 {
 	if (gpio_init())
 		return 1;
 
-	uint8_t *canvas = (uint8_t *)malloc(PANEL_SIZE * sizeof(uint8_t));
-
+	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 	uint16_t count = 0, moveOffset = 0;
+
+	gettimeofday(&saved, NULL); //start time
 
 	while (1) //infinite loop
 	{
 		displayRowInit(count);
-		paintCanvas(count,&moveOffset, canvas);
+		paintCanvas(&moveOffset, canvas);
 		updateRows(count, canvas);
 		count++;
 	}
 }
 
-void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas){
-	if(count%128 == 0){ // shift once to the right every 128 cycles.
+void paintCanvas(uint16_t *moveOffset, uint8_t *canvas){
+	struct timeval now;
+	gettimeofday(&now, NULL);
+        if(getTimeDiff(now, saved) > MOVE_INTERVAL){
+		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
 		if(++*moveOffset == (TOTAL_NUMBER_COLUMNS))
 			*moveOffset = 0;

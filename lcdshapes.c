@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
@@ -168,3 +169,15 @@ static void displayRowEnd(){
         // give it a little time to display
         delay(1);
 }
+
+// couple of timing functions
+long int getTimeDiff(struct timeval a, struct timeval b){
+        long int before = b.tv_sec * 1000000 + b.tv_usec;
+        long int after  = a.tv_sec * 1000000 + a.tv_usec;
+        return (after - before) / 1000; //in milliseconds
+}
+
+void timevalCopy(struct timeval *dest, struct timeval *source){
+        memcpy (dest, source, sizeof (struct timeval));
+}
+

@@ -2,6 +2,7 @@
 #define LCDSHAPES_H_
 
 #include <bcm2835.h>
+#include <sys/time.h>
 
 #define LAT RPI_GPIO_P1_07
 #define CLK RPI_GPIO_P1_11
@@ -42,5 +43,8 @@ void drawSlantLine (int x, int y, bool isPositiveAngle, int length, color c, uin
 void drawRectangle(int x, int y, int width, int height, color c, uint8_t *display);
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display);
 void drawSmileyFace(int x, int y, int diameter, uint8_t *display);
+
+long int getTimeDiff(struct timeval a, struct timeval b);
+void timevalCopy(struct timeval *dest, struct timeval *source);
 
 #endif // LCDSHAPES_H_
