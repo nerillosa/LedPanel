@@ -16,7 +16,7 @@ LAT is the Latch control. Once all shifts have been done for a row, this signals
 
 ## Code Example
 
-This is example code from movingShape.c. It depicts a smiley face running continuously from left to right. The code is very concise and the programming reduces to implementing the paintCanvas() function for your particular shape (smiley in this case). All the constants and draw shape functions are defined in lcdshapes.c. You can take a look at how they are implemented any time. The advantage of this project is that you get to see and analyze all the coding involved as there are no "hidden" libraries that you have no clue how they work.
+This is example code from movingShape.c. It depicts a smiley face running continuously from left to right. The code is very concise and the programming reduces to implementing the paintCanvas() function for your particular shape (smiley in this case). All the constants and draw shape functions are defined in lcdshapes.c. You can take a look at how they are implemented any time. The advantage of this project is that you get to see and analyze all the coding involved as there are no "hidden" libraries that give you no clue on how they work. The only external library used except for the standard C libraries is bcm2835, a GPIO C library by Mike McCauley. This is used to setup the GPIO pins as outputs and to control their values. 
 To compile and run the program you don't need any fancy Makefile or complicated commands. All you need to do is execute two commands. The first to compile the code and create the executable. The other to run the program (needs sudo rights).
 
 gcc -o movingShape -l rt movingShape.c lcdshapes.c -l bcm2835 <br>
