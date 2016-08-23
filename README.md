@@ -61,7 +61,7 @@ void paintCanvas(uint16_t count, uint16_t *moveOffset, uint8_t *canvas){
 ```
 ## Motivation
 
-I delved in moving message panels back in 1997. There was no raspberry pi then. I used a 80C31 microcontroller and the program was written directly in assembly language. There were no tri-color LEDs either. I used a 8x80 panel constructed with red Leds and cardboard backing. I had to add all the LED driver hardware and their controller chips. This included shift registers, latches, NAND gates, power transistors, etc. It was fascinating and challenging work then and still is to this day. Today, all you have to do is connect 12 wires and a power supply, add some software and the rpi (with "unlimited" memory as opposed to the 64k of thhe 80C31), and you're good  to go.
+I delved in moving message panels back in 1997. There was no raspberry pi then. I used a 80C31 microcontroller and the program was written directly in assembly language. There were no tri-color LEDs either. I used a 8x80 panel constructed with red Leds and cardboard backing. I had to add all the LED driver hardware and their controller chips. This included shift registers, latches, NAND gates, power transistors, etc. It was fascinating and challenging work then and still is to this day. Today, all you have to do is connect 12 wires and a power supply, add some software and the rpi (with "unlimited" memory as opposed to the 64k of thhe 80C31), and you're good to go.
 
 ## Installation
 
