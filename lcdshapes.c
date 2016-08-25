@@ -48,25 +48,56 @@ void drawRectangle(int x, int y, int width, int height, color c, uint8_t *displa
 }
 
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){
-        if(diameter == 15){
-                drawVerticalLine(x-7, y-2, 5, c, display);
-                drawVerticalLine(x+7, y-2, 5, c, display);
-                drawHorizontalLine(x-2, y-7, 5, c, display);
-                drawHorizontalLine(x-2, y+7, 5, c, display);
-
-                drawSlantLine (x-6, y-4, true, 3, c, display);
-                drawSlantLine (x+4, y+6, true, 3, c, display);
-                drawSlantLine (x+4, y-6, false, 3, c, display);
-                drawSlantLine (x-6, y+4, false, 3, c, display);
-
-                drawPixel(x-6, y-3, c, display);
-                drawPixel(x-3, y-6, c, display);
-                drawPixel(x+3, y-6, c, display);
-                drawPixel(x+6, y-3, c, display);
-                drawPixel(x-6, y+3, c, display);
-                drawPixel(x-3, y+6, c, display);
-                drawPixel(x+3, y+6, c, display);
-                drawPixel(x+6, y+3, c, display);
+	switch(diameter){
+		case 5:
+                	drawVerticalLine(x-2, y-1, 3, c, display);
+                	drawVerticalLine(x+2, y-1, 3, c, display);
+                	drawHorizontalLine(x-1, y-2, 3, c, display);
+                	drawHorizontalLine(x-1, y+2, 3, c, display);
+			break;
+		case 7:
+                	drawVerticalLine(x-3, y-2, 5, c, display);
+                	drawVerticalLine(x+3, y-2, 5, c, display);
+                	drawHorizontalLine(x-2, y-3, 5, c, display);
+                	drawHorizontalLine(x-2, y+3, 5, c, display);
+			break;
+		case 9:
+                	drawVerticalLine(x-4, y-2, 5, c, display);
+                	drawVerticalLine(x+4, y-2, 5, c, display);
+                	drawHorizontalLine(x-2, y-4, 5, c, display);
+                	drawHorizontalLine(x-2, y+4, 5, c, display);
+        	        drawPixel(x-3, y-3, c, display);
+        	        drawPixel(x+3, y-3, c, display);
+        	        drawPixel(x-3, y+3, c, display);
+        	        drawPixel(x+3, y+3, c, display);
+			break;
+		case 11:
+	                drawSlantLine (x-6, y-2, true, 5, c, display);
+	                drawSlantLine (x-6, y+2, false, 5, c, display);
+                	drawVerticalLine(x-6, y-2, 5, c, display);
+                	drawVerticalLine(x+6, y-2, 5, c, display);
+                	drawHorizontalLine(x-2, y-6, 5, c, display);
+                	drawHorizontalLine(x-2, y+6, 5, c, display);
+	                drawSlantLine (x+2, y+6, true, 5, c, display);
+	                drawSlantLine (x+2, y-6, false, 5, c, display);
+			break;
+		case 15:
+                	drawVerticalLine(x-7, y-2, 5, c, display);
+                	drawVerticalLine(x+7, y-2, 5, c, display);
+                	drawHorizontalLine(x-2, y-7, 5, c, display);
+                	drawHorizontalLine(x-2, y+7, 5, c, display);
+	                drawSlantLine (x-6, y-4, true, 3, c, display);
+        	        drawSlantLine (x+4, y+6, true, 3, c, display);
+                	drawSlantLine (x+4, y-6, false, 3, c, display);
+	                drawSlantLine (x-6, y+4, false, 3, c, display);
+        	        drawPixel(x-6, y-3, c, display);
+                	drawPixel(x-3, y-6, c, display);
+	                drawPixel(x+3, y-6, c, display);
+        	        drawPixel(x+6, y-3, c, display);
+                	drawPixel(x-6, y+3, c, display);
+	                drawPixel(x-3, y+6, c, display);
+        	        drawPixel(x+3, y+6, c, display);
+                	drawPixel(x+6, y+3, c, display);
         }
 }
 
