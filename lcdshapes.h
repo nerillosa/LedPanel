@@ -32,8 +32,8 @@ typedef enum {blue=1,green,cyan,red,magenta,yellow,white} color;
 
 int  gpio_init(void);
 void toggleClock(void);
-void displayRowInit(uint8_t count);
-void updateRows(uint16_t count, uint8_t *displayArray);
+void displayRowInit();
+void updateRows(uint8_t *displayArray);
 static void displayRowEnd(void);
 
 void drawPixel(int x, int y, color c, uint8_t *display);

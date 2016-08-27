@@ -6,6 +6,8 @@
 
 int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
+static uint16_t count = 0;
+
 
 void drawPixel(int x, int y, color c, uint8_t *display){
         if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
@@ -119,8 +121,7 @@ void drawSmileyFace(int x, int y, int diameter, uint8_t *display){
 }
 
 
-void updateRows(uint16_t count, uint8_t *displayArray){
-
+void updateRows(uint8_t *displayArray){
         uint8_t *row1 = displayArray + (count%8 * TOTAL_NUMBER_COLUMNS);
         uint8_t *row2 = displayArray + ((count%8 + 8) * TOTAL_NUMBER_COLUMNS);
         int i;
@@ -139,6 +140,7 @@ void updateRows(uint16_t count, uint8_t *displayArray){
                 toggleClock(); // negative edge clock pulse
         }
 	displayRowEnd();
+	count++;
 }
 
 int gpio_init(){
@@ -179,7 +181,7 @@ void toggleClock(){
         //delay(1);
 }
 
-void displayRowInit(uint8_t count){
+void displayRowInit(){
         bcm2835_gpio_write(OE, HIGH); //disable output with a high value
 	uint8_t a, b, c;
         a = (count & 1)? HIGH : LOW; // change the row
