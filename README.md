@@ -79,4 +79,4 @@ Describe and show how to run the tests with code examples.
 
 ## License
 
-A short snippet describing the license (MIT, Apache, etc.)
+GNU GENERAL PUBLIC LICENSE as described in License.txt
