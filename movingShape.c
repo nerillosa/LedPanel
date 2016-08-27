@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 	gettimeofday(&saved, NULL); //start time
 
-	while (1) //infinite loop
+	while (true) //infinite loop
 	{
 		displayRowInit();
 		paintCanvas(canvas);
