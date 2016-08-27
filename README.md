@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 void paintCanvas(uint8_t *canvas){
 	static uint16_t moveOffset = 0;
 	gettimeofday(&now, NULL);
-        if(getTimeDiff(now, saved) > MOVE_INTERVAL){
+	if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
 		if(++moveOffset == (TOTAL_NUMBER_COLUMNS))
