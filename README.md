@@ -33,9 +33,9 @@ sudo ./movingShape
 
 #define MOVE_INTERVAL  150  // time in milliseconds between each move
 
-void paintCanvas(uint16_t *moveOffset, uint8_t *canvas);
+void paintCanvas(uint8_t *canvas);
 
-struct timeval saved; //last move right time
+struct timeval saved, now;
 
 int main(int argc, char **argv)
 {
@@ -43,28 +43,25 @@ int main(int argc, char **argv)
 		return 1;
 
 	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
-	uint16_t count = 0, moveOffset = 0;
-
 	gettimeofday(&saved, NULL); //start time
 
 	while (1) //infinite loop
 	{
-		displayRowInit(count);
-		paintCanvas(&moveOffset, canvas);
-		updateRows(count, canvas);
-		count++;
+		displayRowInit();
+		paintCanvas(canvas);
+		updateRows(canvas);
 	}
 }
 
-void paintCanvas(uint16_t *moveOffset, uint8_t *canvas){
-	struct timeval now;
+void paintCanvas(uint8_t *canvas){
+	static uint16_t moveOffset = 0;
 	gettimeofday(&now, NULL);
-	if(getTimeDiff(now, saved) > MOVE_INTERVAL){
+        if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
-		if(++*moveOffset == (TOTAL_NUMBER_COLUMNS))
-			*moveOffset = 0;
-		drawSmileyFace(*moveOffset + 7, 8, 15, canvas); // smile!
+		if(++moveOffset == (TOTAL_NUMBER_COLUMNS))
+			moveOffset = 0;
+		drawSmileyFace(moveOffset + 7, 8, 15, canvas); // smile!
 	}
 }
 ```
