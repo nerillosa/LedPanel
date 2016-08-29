@@ -1,4 +1,5 @@
 #include "lcdshapes.h"
+#include "lcdfonts.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -7,7 +8,7 @@
 int PANEL_SIZE = NUMBER_ROWS * NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 int TOTAL_NUMBER_COLUMNS = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 static uint16_t count = 0;
-
+uint8_t letters[][7] = LETTERS;
 
 void drawPixel(int x, int y, color c, uint8_t *display){
         if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
@@ -31,6 +32,19 @@ void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
                 j = offset + i * TOTAL_NUMBER_COLUMNS;
                 if(j >= 0 && j < PANEL_SIZE) // safety check just in case
                         *(display + j) = c;
+        }
+}
+
+void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
+        if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
+        int i,j;
+        uint8_t *letA = GET_ALPHA(letter);
+        for(j=0;j<7;j++){
+                int offset = (y+j) * TOTAL_NUMBER_COLUMNS + x;
+                for(i=0;i<8;i++){
+                        if((letA[j] << i) & 0x80)
+                                *(display + offset + i) = c;
+                }
         }
 }
 
@@ -122,21 +136,34 @@ void drawSmileyFace(int x, int y, int diameter, uint8_t *display){
 
 
 void updateRows(uint8_t *displayArray){
+//	static bool change_color = false;
         uint8_t *row1 = displayArray + (count%8 * TOTAL_NUMBER_COLUMNS);
         uint8_t *row2 = displayArray + ((count%8 + 8) * TOTAL_NUMBER_COLUMNS);
+//        if(count%8 == 0) change_color = !change_color;
         int i;
         uint8_t val;
         for(i=0;i<TOTAL_NUMBER_COLUMNS;i++){
-                val = *(row1+i);
-                bcm2835_gpio_write(R1, ((val & 4)? HIGH : LOW));
-                bcm2835_gpio_write(G1, ((val & 2)? HIGH : LOW));
-                bcm2835_gpio_write(B1, ((val & 1)? HIGH : LOW));
+//		if(change_color){ // if odd
+                	val = *(row1+i);
+                	bcm2835_gpio_write(R1, ((val & 4)? HIGH : LOW));
+	                bcm2835_gpio_write(G1, ((val & 2)? HIGH : LOW));
+        	        bcm2835_gpio_write(B1, ((val & 1)? HIGH : LOW));
+                	val = *(row2+i);
 
-                val = *(row2+i);
-                bcm2835_gpio_write(R2, ((val & 4)? HIGH : LOW));
-                bcm2835_gpio_write(G2, ((val & 2)? HIGH : LOW));
-                bcm2835_gpio_write(B2, ((val & 1 )? HIGH : LOW));
+	                bcm2835_gpio_write(R2, ((val & 4)? HIGH : LOW));
+        	        bcm2835_gpio_write(G2, ((val & 2)? HIGH : LOW));
+                	bcm2835_gpio_write(B2, ((val & 1 )? HIGH : LOW));
+/*		}else{ // if even
+        	        val = *(row1+i);
 
+                        bcm2835_gpio_write(R1, ((val & 32)? HIGH : LOW));
+                        bcm2835_gpio_write(G1, ((val & 16)? HIGH : LOW));
+                        bcm2835_gpio_write(B1, ((val & 8)? HIGH : LOW));
+	                val = *(row2+i);
+                        bcm2835_gpio_write(R2, ((val & 32)? HIGH : LOW));
+                        bcm2835_gpio_write(G2, ((val & 16)? HIGH : LOW));
+                        bcm2835_gpio_write(B2, ((val & 8 )? HIGH : LOW));
+		}*/
                 toggleClock(); // negative edge clock pulse
         }
 	displayRowEnd();
