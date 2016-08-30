@@ -35,16 +35,17 @@ void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
         }
 }
 
+/* Draws a letter. Position x,y the is top left corner of letter. Can write partial letter if x<0 or x>(TOTAL_NUMBER_COLUMNS-8) */
 void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
         if(x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
         int i,j;
         uint8_t *letA = GET_ALPHA(letter);
         for(j=0;j<7;j++){ //Letter height = 7
                 int offset = (y+j) * TOTAL_NUMBER_COLUMNS + x;
-                for(i=0;i<8;i++){
-                        if((letA[j] << i) & 0x80 && (offset + i) < PANEL_SIZE
-			&& (offset + i) >= (y+j)*TOTAL_NUMBER_COLUMNS
-			&& (offset + i) < (y+j+1)*TOTAL_NUMBER_COLUMNS )
+                for(i=0;i<8;i++){ //each letter is 8 bits wide
+                        if((letA[j] << i) & 0x80 && (offset + i) < PANEL_SIZE // don't write outside allocated display buffer
+			&& (offset + i) >= (y+j)*TOTAL_NUMBER_COLUMNS  // make sure you don't write previous row in case x is negative
+			&& (offset + i) < (y+j+1)*TOTAL_NUMBER_COLUMNS ) // make sure you don't write beyond row y+j
                                 *(display + offset + i) = c;
                 }
         }
