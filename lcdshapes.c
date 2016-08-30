@@ -36,13 +36,15 @@ void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
 }
 
 void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
-        if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
+        if(x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
         int i,j;
         uint8_t *letA = GET_ALPHA(letter);
-        for(j=0;j<7;j++){
+        for(j=0;j<7;j++){ //Letter height = 7
                 int offset = (y+j) * TOTAL_NUMBER_COLUMNS + x;
                 for(i=0;i<8;i++){
-                        if((letA[j] << i) & 0x80)
+                        if((letA[j] << i) & 0x80 && (offset + i) < PANEL_SIZE
+			&& (offset + i) >= (y+j)*TOTAL_NUMBER_COLUMNS
+			&& (offset + i) < (y+j+1)*TOTAL_NUMBER_COLUMNS )
                                 *(display + offset + i) = c;
                 }
         }
