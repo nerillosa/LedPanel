@@ -3,7 +3,8 @@
 // Uses bcm2835, a fast GPIO C library by Mike McCauley. I just use the basic output functionality.
 // To install : http://www.raspberry-projects.com/pi/programming-in-c/io-pins/bcm2835-by-mike-mccauley
 //
-// Running this program shows a moving text message. The message can be defined as an input parameter.
+// Running this program shows a text message moving from right to left. 
+// The message can be defined as an input parameter.
 // Messages can have a maximum length of 200 characters.
 // The function for drawing letters is located in lcdshapes.c
 //
