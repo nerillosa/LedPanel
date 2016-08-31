@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint8_t *canvas){
-	static uint16_t moveOffset = 0;
+	static int moveOffset = 0;
 	gettimeofday(&now, NULL);
 	if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
