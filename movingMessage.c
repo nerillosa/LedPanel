@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint8_t *canvas){
-	static int moveOffset = 64;
+	static int moveOffset = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 	gettimeofday(&now, NULL);
 	int strlength = strlen(mesg);
 
