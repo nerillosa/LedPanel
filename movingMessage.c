@@ -7,9 +7,6 @@
 // After installing bcm2835, you can build and run this with:
 // gcc -o movingMessage -l rt movingMessage.c lcdshapes.c -l bcm2835
 // sudo ./movingMessage "HI THERE!"
-//
-// Author: Neri Llosa (nerillosa@gmail.com)
-// Copyright (C) 2016 Neri Llosa
 
 #include <sys/time.h>
 #include <stdio.h>
@@ -20,14 +17,14 @@
 #include "lcdshapes.h"
 #include "lcdfonts.h"
 
-#define MOVE_INTERVAL  150  // time in milliseconds between each move
+#define MOVE_INTERVAL  50  // time in milliseconds between each move
 #define MAX_MESG_LENGTH 200
 
 void paintCanvas(uint8_t *canvas);
 
 struct timeval saved, now;
 
-char mesg[MAX_MESG_LENGTH] = "DO YOU REMEMBER HOW IT USED TO BE ?"; //default message if none given as a parameter
+char mesg[MAX_MESG_LENGTH] = "GOOD DAY TO YOU!"; //default message if none given as a parameter
 
 int main(int argc, char **argv)
 {
@@ -49,17 +46,20 @@ int main(int argc, char **argv)
 
 void paintCanvas(uint8_t *canvas){
 	static int moveOffset = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
+	static color clr = blue;
 	gettimeofday(&now, NULL);
 	int strlength = strlen(mesg);
 
         if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
-		if(--moveOffset == -1*LETTER_WIDTH*strlength)
+		if(--moveOffset == -1*LETTER_WIDTH*strlength){
 			moveOffset = TOTAL_NUMBER_COLUMNS;
+			if(++clr == 8) clr = blue;
+		}
 		int i=0;
         	for(i=0;i<strlength;i++){
-              		drawLetter(*(mesg+i), moveOffset + LETTER_WIDTH*i, 5, blue, canvas);
+              		drawLetter(*(mesg+i), moveOffset + LETTER_WIDTH*i, 5, clr, canvas);
 	      	}
 	}
 }
