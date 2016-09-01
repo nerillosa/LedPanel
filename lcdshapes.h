@@ -31,6 +31,11 @@ extern uint8_t letters[][7];
 typedef enum {false=0,true} bool;
 typedef enum {blue=1,green,cyan,red,magenta,yellow,white} color;
 
+typedef struct {
+  uint8_t x, y;
+  color c;
+} Point;
+
 int  gpio_init(void);
 void toggleClock(void);
 void displayRowInit();
