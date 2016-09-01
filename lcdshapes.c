@@ -43,9 +43,9 @@ void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
         if(x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
         int i,j;
         uint8_t *letA = GET_ALPHA(letter);
-        for(j=0;j<7;j++){ //Letter height = 7
+        for(j=0;j<LETTER_HEIGHT;j++){
                 int offset = (y+j) * TOTAL_NUMBER_COLUMNS + x;
-                for(i=0;i<8;i++){ //each letter is 8 bits wide
+                for(i=0;i<LETTER_WIDTH;i++){
                         if((letA[j] << i) & 0x80
 			&& (offset + i) < PANEL_SIZE && (offset + i) >= 0 // don't write outside allocated display buffer
 			&& (offset + i) >= (y+j)*TOTAL_NUMBER_COLUMNS     // make sure you don't write on previous row
