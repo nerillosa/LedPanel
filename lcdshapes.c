@@ -16,6 +16,10 @@ void drawPixel(int x, int y, color c, uint8_t *display){
         *(display + offset) = c;
 }
 
+void drawPixel2(Point point, uint8_t *display){
+	drawPixel(point.x, point.y, point.c, display);
+}
+
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display){
         if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || width <=0) return; //sanity check
         int i, offset = y * TOTAL_NUMBER_COLUMNS + x;
