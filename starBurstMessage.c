@@ -21,7 +21,7 @@ struct pointPair {
 };
 
 void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize);
-void alterPicPoints(struct pointPair *picPoints, int picPointsSize);
+bool alterPicPoints(struct pointPair *picPoints, int picPointsSize);
 int initPicPoints(struct pointPair *picPoints);
 
 struct timeval saved, now;
@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize){
+	static int state = 0;
 	gettimeofday(&now, NULL);
         if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
@@ -57,18 +58,25 @@ void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize
 	        for(i=0;i<picPointsSize;i++){
         	        drawPixel2(picPoints[i].current, canvas);
         	}
-		alterPicPoints(picPoints, picPointsSize);
+		if(!alterPicPoints(picPoints, picPointsSize)){
+			if(++state == 20){ // show the unaltered message for 20 cycles
+				state = 0;
+				initPicPoints(picPoints); //re-randomize screen
+			}
+		}
 	}
 }
 
-void alterPicPoints(struct pointPair *picPoints, int picPointsSize){
+bool alterPicPoints(struct pointPair *picPoints, int picPointsSize){
 	int i,j;
+	bool altered = false;
 	for(i=0;i<picPointsSize;i++){
 		struct pointPair *picPoint = picPoints + i;
 		if(picPoint->current.x == picPoint->final.x && picPoint->current.y == picPoint->final.y){
 			picPoint->current.c = picPoint->final.c;
 			continue;
 		}
+		altered = true;
 		j = rand()%5;
 		if(j){ // move the x 4 times more than the y
 			if(picPoint->current.x != picPoint->final.x){
@@ -86,6 +94,7 @@ void alterPicPoints(struct pointPair *picPoints, int picPointsSize){
 			}
 		}
 	}
+	return altered;
 }
 
 int initPicPoints(struct pointPair *picPoints){
