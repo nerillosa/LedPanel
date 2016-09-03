@@ -46,8 +46,8 @@ int main(int argc, char **argv)
 
 	for(i=0,j=0;i<PANEL_SIZE;i++){ //save the message as an array of points
  		if(canvas[i]){
-			picPoints[j].final.x = i%64;
-			picPoints[j].final.y = i/64;
+			picPoints[j].final.x = i%TOTAL_NUMBER_COLUMNS;
+			picPoints[j].final.y = i/TOTAL_NUMBER_COLUMNS;
 			picPoints[j].final.c = green;
 			j++;
 		}
@@ -64,11 +64,11 @@ int main(int argc, char **argv)
 	int r;
 	for(i=0;i<picPointsSize;i++){ // create a random array of points with same size as message points
 		while(true){
-			r = rand()%1024;
+			r = rand()%PANEL_SIZE;
 			if(!chosen[r]){
 				chosen[r]=1;
-				picPoints[i].current.x = r%64;
-				picPoints[i].current.y = r/64;
+				picPoints[i].current.x = r%TOTAL_NUMBER_COLUMNS;
+				picPoints[i].current.y = r/TOTAL_NUMBER_COLUMNS;
 				picPoints[i].current.c = (rand()%7) + 1;
 				break;
 			}
