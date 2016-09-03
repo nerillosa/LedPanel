@@ -16,58 +16,59 @@
 
 #define MOVE_INTERVAL  100  // time in milliseconds between each move
 
-struct pointPair {
-	Point current, final;
-};
+static void paintCanvas(uint8_t *canvas);
 
-void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize);
-bool alterPicPoints(struct pointPair *picPoints, int picPointsSize);
-int initPicPoints(struct pointPair *picPoints);
+static int picPointsSize;
+static bool alterPicPoints();
+static int initPicPoints();
+static void randomizePicPoints();
+static struct timeval saved, now;
+static char *mesg = "HI THERE!";
 
-struct timeval saved, now;
-char *mesg = "HI THERE!";
+static struct pointPair {
+   Point current, final;
+} *picPoints = NULL;
+
 
 int main(int argc, char **argv)
 {
 	if (gpio_init())
 		return 1;
-
+	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 	gettimeofday(&saved, NULL); //start time
 	srand(time(NULL));
-
-	struct pointPair picPoints[PANEL_SIZE];
-	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
-
-	int picPointsSize = initPicPoints(picPoints);
-
 	while (true) //infinite loop
 	{
 		displayRowInit();
-		paintCanvas(canvas, picPoints, picPointsSize);
+		paintCanvas(canvas);
 		updateRows(canvas);
 	}
 }
 
-void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize){
+void paintCanvas(uint8_t *canvas){
 	static int state = 0;
+
+	if(picPoints == NULL){ //one time initialization
+		initPicPoints();
+	}
 	gettimeofday(&now, NULL);
         if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
 		int i;
 	        for(i=0;i<picPointsSize;i++){
-        	        drawPixel2(picPoints[i].current, canvas);
+        	        drawPoint(picPoints[i].current, canvas);
         	}
-		if(!alterPicPoints(picPoints, picPointsSize)){
+		if(!alterPicPoints()){
 			if(++state == 20){ // show the unaltered message for 20 cycles
 				state = 0;
-				initPicPoints(picPoints); //re-randomize screen
+				randomizePicPoints(); //re-randomize screen
 			}
 		}
 	}
 }
 
-bool alterPicPoints(struct pointPair *picPoints, int picPointsSize){
+bool alterPicPoints(){
 	int i,j;
 	bool altered = false;
 	for(i=0;i<picPointsSize;i++){
@@ -97,9 +98,11 @@ bool alterPicPoints(struct pointPair *picPoints, int picPointsSize){
 	return altered;
 }
 
-int initPicPoints(struct pointPair *picPoints){
+initPicPoints(){
 	int i,j;
 	int slen = strlen(mesg);
+	picPoints = (struct pointPair *) malloc (PANEL_SIZE * sizeof(struct pointPair));
+
 	uint8_t canvas[PANEL_SIZE];
 	memset(canvas, 0, PANEL_SIZE);
 
@@ -115,23 +118,24 @@ int initPicPoints(struct pointPair *picPoints){
 			j++;
 		}
 	}
+	picPointsSize = j;
+	randomizePicPoints();
+}
 
-	int picPointsSize = j;
-
-	memset(canvas, 0, PANEL_SIZE);
-
-	int r;
-	for(i=0;i<picPointsSize;i++){ // create a random array of points with same size as message points
+void randomizePicPoints(){
+	uint8_t chosen[PANEL_SIZE];
+	memset(chosen, 0, PANEL_SIZE);
+	int r, i;
+	for(i=0;i<picPointsSize;i++){
 		while(true){
 			r = rand()%PANEL_SIZE;
-			if(!canvas[r]){
-				canvas[r]=1;
+			if(!chosen[r]){
+				chosen[r]=1;
 				picPoints[i].current.x = r%TOTAL_NUMBER_COLUMNS;
 				picPoints[i].current.y = r/TOTAL_NUMBER_COLUMNS;
 				picPoints[i].current.c = (rand()%7) + 1;
 				break;
 			}
 		}
-        }
-	return picPointsSize;
+	}
 }

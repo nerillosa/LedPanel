@@ -43,7 +43,7 @@ void updateRows(uint8_t *displayArray);
 static void displayRowEnd(void);
 
 void drawPixel(int x, int y, color c, uint8_t *display);
-void drawPixel2(Point point, uint8_t *display);
+void drawPoint(Point point, uint8_t *display);
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display);
 void drawVerticalLine(int x, int y, int height, color c, uint8_t *display);
 void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display);

@@ -16,7 +16,7 @@ void drawPixel(int x, int y, color c, uint8_t *display){
         *(display + offset) = c;
 }
 
-void drawPixel2(Point point, uint8_t *display){
+void drawPoint(Point point, uint8_t *display){
 	drawPixel(point.x, point.y, point.c, display);
 }
 
