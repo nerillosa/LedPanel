@@ -84,14 +84,11 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize){
-	static int moveOffset = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 	gettimeofday(&now, NULL);
-	int strlength = strlen(mesg);
-
         if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
-		int i=0;
+		int i;
 	        for(i=0;i<picPointsSize;i++){
         	        drawPixel2(picPoints[i].current, canvas);
         	}
