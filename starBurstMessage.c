@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 		return 1;
 
 	gettimeofday(&saved, NULL); //start time
+	srand(time(NULL));
 
 	struct pointPair picPoints[PANEL_SIZE];
 	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
@@ -109,7 +110,6 @@ int initPicPoints(struct pointPair *picPoints){
 	int picPointsSize = j;
 
 	memset(canvas, 0, PANEL_SIZE);
-	srand(time(NULL));
 
 	int r;
 	for(i=0;i<picPointsSize;i++){ // create a random array of points with same size as message points
