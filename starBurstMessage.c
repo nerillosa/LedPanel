@@ -22,58 +22,22 @@ struct pointPair {
 
 void paintCanvas(uint8_t *canvas, struct pointPair *picPoints, int picPointsSize);
 void alterPicPoints(struct pointPair *picPoints, int picPointsSize);
+int initPicPoints(struct pointPair *picPoints);
 
 struct timeval saved, now;
 char *mesg = "HI THERE!";
 
 int main(int argc, char **argv)
 {
-
-	struct pointPair picPoints[PANEL_SIZE];
-
 	if (gpio_init())
 		return 1;
 
-	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 	gettimeofday(&saved, NULL); //start time
 
-	int i,j;
-	int slen = strlen(mesg);
+	struct pointPair picPoints[PANEL_SIZE];
+	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 
-	for(i=0;i<slen;i++){ //Draw the message in the canvas
-		drawLetter(*(mesg+i), LETTER_WIDTH*i, 5, green, canvas);
-	}
-
-	for(i=0,j=0;i<PANEL_SIZE;i++){ //save the message as an array of points
- 		if(canvas[i]){
-			picPoints[j].final.x = i%TOTAL_NUMBER_COLUMNS;
-			picPoints[j].final.y = i/TOTAL_NUMBER_COLUMNS;
-			picPoints[j].final.c = green;
-			j++;
-		}
-	}
-
-	int picPointsSize = j;
-	memset(canvas, 0, PANEL_SIZE); // clear the canvas
-
-	uint8_t chosen[PANEL_SIZE];
-	memset(chosen, 0, PANEL_SIZE);
-
-	srand(time(NULL));
-
-	int r;
-	for(i=0;i<picPointsSize;i++){ // create a random array of points with same size as message points
-		while(true){
-			r = rand()%PANEL_SIZE;
-			if(!chosen[r]){
-				chosen[r]=1;
-				picPoints[i].current.x = r%TOTAL_NUMBER_COLUMNS;
-				picPoints[i].current.y = r/TOTAL_NUMBER_COLUMNS;
-				picPoints[i].current.c = (rand()%7) + 1;
-				break;
-			}
-		}
-        }
+	int picPointsSize = initPicPoints(picPoints);
 
 	while (true) //infinite loop
 	{
@@ -121,4 +85,44 @@ void alterPicPoints(struct pointPair *picPoints, int picPointsSize){
 			}
 		}
 	}
+}
+
+int initPicPoints(struct pointPair *picPoints){
+	int i,j;
+	int slen = strlen(mesg);
+	uint8_t canvas[PANEL_SIZE];
+	memset(canvas, 0, PANEL_SIZE);
+
+	for(i=0;i<slen;i++){ //Draw the message in the canvas
+		drawLetter(*(mesg+i), LETTER_WIDTH*i, 5, green, canvas);
+	}
+
+	for(i=0,j=0;i<PANEL_SIZE;i++){ //save the message as an array of points
+ 		if(canvas[i]){
+			picPoints[j].final.x = i%TOTAL_NUMBER_COLUMNS;
+			picPoints[j].final.y = i/TOTAL_NUMBER_COLUMNS;
+			picPoints[j].final.c = green;
+			j++;
+		}
+	}
+
+	int picPointsSize = j;
+
+	memset(canvas, 0, PANEL_SIZE);
+	srand(time(NULL));
+
+	int r;
+	for(i=0;i<picPointsSize;i++){ // create a random array of points with same size as message points
+		while(true){
+			r = rand()%PANEL_SIZE;
+			if(!canvas[r]){
+				canvas[r]=1;
+				picPoints[i].current.x = r%TOTAL_NUMBER_COLUMNS;
+				picPoints[i].current.y = r/TOTAL_NUMBER_COLUMNS;
+				picPoints[i].current.c = (rand()%7) + 1;
+				break;
+			}
+		}
+        }
+	return picPointsSize;
 }
