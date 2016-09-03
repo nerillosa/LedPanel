@@ -60,7 +60,7 @@ void paintCanvas(uint8_t *canvas){
         	        drawPoint(picPoints[i].current, canvas);
         	}
 		if(!alterPicPoints()){
-			if(++state == 20){ // show the unaltered message for 20 cycles
+			if(++state == 20){ // show the unaltered message for 20 MOVE_INTERVALs (~2 sec)
 				state = 0;
 				randomizePicPoints(); //re-randomize screen
 			}
