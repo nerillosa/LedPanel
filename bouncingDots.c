@@ -71,14 +71,12 @@ void initDotSprites(){
 
 void showDotSprite(struct dotSprite *dot, uint8_t *canvas){
 		drawPoint(dot->point, canvas);
-
 		if(dot->point.x == 0 || dot->point.x == TOTAL_NUMBER_COLUMNS-1){
 			dot->dx *= -1;
 		}
 		if(dot->point.y == 0 || dot->point.y == NUMBER_ROWS-1){
 			dot->dy *= -1;
 		}
-
 		dot->point.x += dot->dx;
 		dot->point.y += dot->dy;
 }
