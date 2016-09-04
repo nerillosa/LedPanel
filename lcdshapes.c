@@ -21,7 +21,7 @@ void drawPoint(Point point, uint8_t *display){
 }
 
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display){
-        if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || width <=0) return; //sanity check
+        if(x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || width <=0) return; //sanity check
         int i, offset = y * TOTAL_NUMBER_COLUMNS + x;
         for(i=0;i<width;i++){
                 if((offset + i) >= y*TOTAL_NUMBER_COLUMNS && (offset + i) < (y+1)*TOTAL_NUMBER_COLUMNS) // keep it in the same row
@@ -30,7 +30,7 @@ void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display){
 }
 
 void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
-        if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS || height <=0) return; //sanity check
+        if(x<0 || x>=TOTAL_NUMBER_COLUMNS || y>=NUMBER_ROWS || height <=0) return; //sanity check
         int i, j, offset = y * TOTAL_NUMBER_COLUMNS + x;
         for(i=0;i<height;i++){
                 j = offset + i * TOTAL_NUMBER_COLUMNS;
@@ -72,6 +72,16 @@ void drawRectangle(int x, int y, int width, int height, color c, uint8_t *displa
         drawVerticalLine(x, y, height, c, display);
         drawHorizontalLine(x, y + height - 1, width, c, display);
         drawVerticalLine(x + width -1, y, height, c, display);
+}
+
+
+void drawBall(int x, int y, int diameter, color c,  uint8_t *display){
+
+	if(diameter == 5){
+		drawCircle(x, y, 5, c, display);
+		drawRectangle(x-1, y-1, 3, 3, c, display);
+		drawPixel(x, y, c, display);
+	}
 }
 
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){

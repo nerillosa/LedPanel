@@ -50,6 +50,7 @@ void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display);
 void drawSlantLine (int x, int y, bool isPositiveAngle, int length, color c, uint8_t *display);
 void drawRectangle(int x, int y, int width, int height, color c, uint8_t *display);
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display);
+void drawBall(int x, int y, int diameter, color c,  uint8_t *display);
 void drawSmileyFace(int x, int y, int diameter, uint8_t *display);
 
 long int getTimeDiff(struct timeval a, struct timeval b);
