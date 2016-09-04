@@ -17,16 +17,15 @@
 #define NUMBER_DOTS    20
 
 void paintCanvas(uint8_t *canvas);
+void initDotSprites();
+void showDotSprite(struct dotSprite *dot, uint8_t *canvas);
 
 static struct dotSprite {
    Point point;
    short dx,dy;
 } *dotSprites = NULL;
 
-void initDotSprites();
-void showDotSprite(struct dotSprite *dot, uint8_t *canvas);
-
-struct timeval saved, now;
+static struct timeval saved, now;
 
 int main(int argc, char **argv)
 {
