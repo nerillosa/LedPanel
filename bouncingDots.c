@@ -16,16 +16,15 @@
 #define MOVE_INTERVAL  100  // time in milliseconds between each move
 #define NUMBER_DOTS    20
 
-void paintCanvas(uint8_t *canvas);
-void initDotSprites();
-void showDotSprite(struct dotSprite *dot, uint8_t *canvas);
-
+static struct timeval saved, now;
 static struct dotSprite {
    Point point;
    short dx,dy;
 } *dotSprites = NULL;
 
-static struct timeval saved, now;
+void paintCanvas(uint8_t *canvas);
+void initDotSprites();
+void showDotSprite(struct dotSprite *dot, uint8_t *canvas);
 
 int main(int argc, char **argv)
 {
