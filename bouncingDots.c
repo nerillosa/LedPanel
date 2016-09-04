@@ -46,7 +46,6 @@ void paintCanvas(uint8_t *canvas){
 		initDotSprites();
 	}
 	gettimeofday(&now, NULL);
-
         if(getTimeDiff(now, saved) > MOVE_INTERVAL){
 		timevalCopy(&saved, &now);
 		memset(canvas, 0, PANEL_SIZE); // clear the canvas
