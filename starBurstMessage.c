@@ -20,7 +20,7 @@ static void paintCanvas(uint8_t *canvas);
 
 static int picPointsSize;
 static bool alterPicPoints();
-static int initPicPoints();
+static void initPicPoints();
 static void randomizePicPoints();
 static struct timeval saved, now;
 static char *mesg = "HI THERE!";
@@ -98,7 +98,7 @@ bool alterPicPoints(){
 	return altered;
 }
 
-initPicPoints(){
+void initPicPoints(){
 	int i,j;
 	int slen = strlen(mesg);
 	picPoints = (struct pointPair *) malloc (PANEL_SIZE * sizeof(struct pointPair));
