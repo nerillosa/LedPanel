@@ -44,7 +44,7 @@ void drawVerticalLine(int x, int y, int height, color c, uint8_t *display){
 **  Example: drawLetter('A', 0, 9, blue, canvas) draws a blue letter A at the bottom left of the Led Panel.
 */
 void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
-        if(x>=TOTAL_NUMBER_COLUMNS || y<0 || y>=NUMBER_ROWS) return; //sanity check
+        if(x>=TOTAL_NUMBER_COLUMNS || y < -6 || y>=NUMBER_ROWS) return; //sanity check
         int i,j;
         uint8_t *letA = GET_ALPHA(letter);
         for(j=0;j<LETTER_HEIGHT;j++){
@@ -57,6 +57,10 @@ void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display){
                                 *(display + offset + i) = c;
                 }
         }
+}
+
+void drawLetterP( uint8_t letter, Point p, uint8_t *display){
+	drawLetter(letter, p.x, p.y, p.c, display);
 }
 
 void drawSlantLine (int x, int y, bool isPositiveAngle, int length, color c, uint8_t *display){

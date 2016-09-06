@@ -32,7 +32,7 @@ typedef enum {false=0,true} bool;
 typedef enum {blue=1,green,cyan,red,magenta,yellow,white} color;
 
 typedef struct {
-  uint8_t x, y;
+  short x, y;
   color c;
 } Point;
 
@@ -47,6 +47,7 @@ void drawPoint(Point point, uint8_t *display);
 void drawHorizontalLine(int x, int y, int width, color c, uint8_t *display);
 void drawVerticalLine(int x, int y, int height, color c, uint8_t *display);
 void drawLetter( uint8_t letter, int x, int y, color c, uint8_t *display);
+void drawLetterP( uint8_t letter, Point p, uint8_t *display);
 void drawSlantLine (int x, int y, bool isPositiveAngle, int length, color c, uint8_t *display);
 void drawRectangle(int x, int y, int width, int height, color c, uint8_t *display);
 void drawCircle(int x, int y, int diameter, color c,  uint8_t *display);
