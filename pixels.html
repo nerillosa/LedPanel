@@ -30,33 +30,62 @@
                         text += "{" + i + "," + index + "},";
                 });
             });
-            $("#output").html(text.slice(0, -1) + "};");
+            if (text.length > 20) {
+                $("#output").html(text.slice(0, -1) + "};");
+                $("button").show();
+            }
+        });
+        $('#myTxt').on('keyup', function (e) {
+            if (e.keyCode === 13) {
+                var res = $(this).val().match(/(\d+,\d+)/g);
+                for (var i = 0; i < res.length; i++) {
+                    var nums = res[i].split(",");
+                    colorPixel(nums[0], nums[1]);
+                }
+            }
         });
     });
+
+    function colorPixel(x, y) {
+        var row = $('table tr').eq(y);
+        var pixelDiv = row.children().eq(x).find("div");
+        pixelDiv.addClass("red").removeClass("black");
+        pixelDiv.css("background-color", "red");
+    }
+
+    function copyToClipboard() {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($("#output").text()).select();
+        document.execCommand("copy");
+        $temp.remove();
+    }
 </script>
 <style type="text/css">
  .circle {
-      width: 12px;
-      height: 12px;
-      -webkit-border-radius: 6px;
-      -moz-border-radius: 6px;
-      border-radius: 6px;
+      width: 14px;
+      height: 14px;
+      -webkit-border-radius: 7px;
+      -moz-border-radius: 7px;
+      border-radius: 7px;
       background-color: black;
     }
 </style>
 </head>
 <body>
 <br />
+<div style="float: right;margin-right: 25%;"><input size="30" type="text" id="myTxt" /><br /><br />Enter array and press Enter</div>
 Clicking on a black dot makes it red. When you are done creating your pattern,<br />
 click on the Create button and the code for an Array of points will be shown.<br />
-This array can be used in conjunction with the drawPixel() function to draw the pattern on the LED panel.  
+This array can be used in conjunction with the drawPixel() function to draw<br /> the pattern on the LED panel.  
 <hr />
 <table></table>
 <br />
 <div><button style="margin-left: 40%;">Create Point Array</button></div>
 <br />
 <div id="output"></div>
-
+<br />
+<button style="display: none;" onclick="copyToClipboard()">Copy to Clipboard</button>
 </body>
 
 </html>
