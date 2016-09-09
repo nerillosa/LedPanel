@@ -22,7 +22,7 @@
                 $(this).css("background-color", "black");
             }
         });
-        $("button").click(function () {
+        $("#crtarr").click(function () {
             var text = "Point points[] = {";
             $.each($("tr"), function (index) {
                 $.each($(this).find("td"), function (i) {
@@ -81,7 +81,7 @@ This array can be used in conjunction with the drawPixel() function to draw<br /
 <hr />
 <table></table>
 <br />
-<div><button style="margin-left: 40%;">Create Point Array</button></div>
+<div><button id="crtarr" style="margin-left: 40%;">Create Point Array</button></div>
 <br />
 <div id="output"></div>
 <br />
