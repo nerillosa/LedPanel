@@ -46,7 +46,7 @@
                 var res = $(this).val().match(/(\d+,\d+)/g);
                 for (var i = 0; i < res.length; i++) {
                     var nums = res[i].split(",");
-                    colorPixel(nums[0], nums[1]);
+                    colorPixel(parseInt($("#offset").val()) + parseInt( nums[0]), nums[1]);
                 }
             }
         });
@@ -80,11 +80,12 @@
 </head>
 <body>
 <br />
-<div style="float: right;margin-right: 25%;">To fill matrix with predefined points,<br />Enter array ({x1,y1},{x2,y2},...) and press Enter:<br /><input size="30" type="text" id="myTxt" />&nbsp;<button onclick="$('#myTxt').val('')" >Clear</button></div>
+
+<div style="float: right;margin-right: 25%;"><span>x-offset<br \><input type="text" value="0" id="offset" size="3" /></span>&nbsp;&nbsp;To fill matrix with predefined points,<br />Enter array ({x1,y1},{x2,y2},...) and press Enter:<br /><input size="30" type="text" id="myTxt" />&nbsp;<button onclick="$('#myTxt').val('')" >Clear</button></div>
 Clicking on a black dot makes it red. When you are done creating your pattern,<br />
 click on the Create button and the code for an Array of points will be shown.<br />
 This array can be used in conjunction with the drawPixel() function to draw<br /> the pattern on the LED panel.  
-<hr />
+<br /><br /><hr>
 <table></table>
 <br />
 <div><button id="crtarr" style="margin-left: 40%;margin-right: 5px;">Create Point Array</button><button id="clear">Clear Panel</button></div>
