@@ -143,22 +143,22 @@ void drawCircle(int x, int y, int diameter, color c,  uint8_t *display){
 }
 
 void drawSmileyFace(int x, int y, int diameter, uint8_t *display){
-        drawCircle(x, y, diameter, yellow, display);
-
-        //mouth
-        drawHorizontalLine(x-2, y+4, 5, red, display);
-        drawPixel(x-3,y+3,red, display);
-        drawPixel(x+3,y+3,red, display);
-
-        //eyes
-        drawHorizontalLine(x-3, y-3, 2, blue, display);
-        drawHorizontalLine(x+2, y-3, 2, blue, display);
-
-        //nose
-        drawPixel(x, y-1, green, display);
-        drawHorizontalLine(x-1, y, 3, green, display);
+	switch(diameter){
+		case 15:
+		        drawCircle(x, y, diameter, yellow, display);
+        		//mouth
+	        	drawHorizontalLine(x-2, y+4, 5, red, display);
+	        	drawPixel(x-3,y+3,red, display);
+		        drawPixel(x+3,y+3,red, display);
+        		//eyes
+		        drawHorizontalLine(x-3, y-3, 2, blue, display);
+        		drawHorizontalLine(x+2, y-3, 2, blue, display);
+	        	//nose
+	        	drawPixel(x, y-1, green, display);
+		        drawHorizontalLine(x-1, y, 3, green, display);
+			break;
+	}
 }
-
 
 void updateRows(uint8_t *displayArray){
 //	static bool change_color = false;
