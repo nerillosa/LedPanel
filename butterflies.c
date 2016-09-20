@@ -17,7 +17,7 @@
 #define MOVE_INTERVAL  150  // time in milliseconds between each move
 #define POINTS_PER_BUTTERFLY 3
 #define NUM_WING_STATES 3
-#define NUM_BUTTERFLIES 6
+#define NUM_BUTTERFLIES 5
 #define BUTTERFLY_LENGTH 4
 
 static struct butterfly {
@@ -38,6 +38,7 @@ void randomizeArray(int* arr, int arr_length, int limit);
 void paintSupports(uint8_t *canvas);
 void checkMove(struct butterfly *bfly);
 void drawDoneMessage(uint8_t *canvas);
+void randomizeButterflies();
 int  compare_points(const void* a, const void* b);
 
 struct timeval saved, now;
@@ -65,7 +66,7 @@ int main(int argc, char **argv)
 }
 
 void paintCanvas(uint8_t *canvas){
-
+	static int state = 0;
 	if(butterflies == NULL){ //one time initialization
 		initButterflies();
 	}
@@ -96,7 +97,14 @@ void paintCanvas(uint8_t *canvas){
 			}
 			if(butterflies[i].moving) allperched = false;
 		}
-		if(allperched) drawDoneMessage(canvas);
+		if(allperched){
+			drawDoneMessage(canvas);
+			if(++state == 20){ // show the done message for 20 MOVE_INTERVALs (~3 sec)
+				state = 0;
+				randomizeButterflies(); //re-randomize butterflies
+			}
+
+		}
 	}
 }
 
@@ -114,25 +122,25 @@ void paintSupports(uint8_t *canvas){
 }
 
 void initButterflies(){
-
 	//sort the perch points by their x value to color them uniformly
 	qsort(perchPoints, slen, sizeof(Point), compare_points);
+	butterflies = (struct butterfly *) malloc (NUM_BUTTERFLIES * sizeof(struct butterfly));
+	randomizeButterflies();
+}
 
+void randomizeButterflies(){
 	// 30 possible starting points not intersecting with each other
 	// created with pixels.html
-	//Point points[] = {{4,2},{8,2},{12,2},{16,2},{20,2},{24,2},{28,2},{32,2},{36,2},{40,2},{44,2},{48,2},{52,2},{56,2},{60,2},{4,6},{8,6},{12,6},{16,6},{20,6},{24,6},{28,6},{32,6},{36,6},{40,6},{44,6},{48,6},{52,6},{56,6},{60,6},{4,10},{8,10},{12,10},{16,10},{20,10},{24,10},{28,10},{32,10},{36,10},{40,10},{44,10},{48,10},{52,10},{56,10},{60,10}};
-	Point points[] = {{4,2},{8,2},{12,2},{16,2},{20,2},{24,2},{28,2},{32,2},{36,2},{40,2},{44,2},{48,2},{52,2},{56,2},{60,2},{4,6},{8,6},{12,6},{16,6},{20,6},{24,6},{28,6},{32,6},{36,6},{40,6},{44,6},{48,6},{52,6},{56,6},{60,6}};
+	Point ppoints[] = {{4,2},{8,2},{12,2},{16,2},{20,2},{24,2},{28,2},{32,2},{36,2},{40,2},{44,2},{48,2},{52,2},{56,2},{60,2},{4,6},{8,6},{12,6},{16,6},{20,6},{24,6},{28,6},{32,6},{36,6},{40,6},{44,6},{48,6},{52,6},{56,6},{60,6}};
 	int pindices[NUM_BUTTERFLIES];
 
 	// fill array with non duplicate random numbers from 0-29
 	randomizeArray(pindices, NUM_BUTTERFLIES, 30);
 
-	butterflies = (struct butterfly *) malloc (NUM_BUTTERFLIES * sizeof(struct butterfly));
 	int i,j;
-
 	for(i=0;i<NUM_BUTTERFLIES;i++){
 		butterflies[i].moving = 1;
-		butterflies[i].pointsOffset = 0;
+		butterflies[i].pointsOffset = rand()%NUM_WING_STATES;
 		butterflies[i].headColor = rand()%7 + 1;
 		while(true){
 			j = rand()%7 + 1;
@@ -141,10 +149,9 @@ void initButterflies(){
 				break;
 			}
 		}
-		butterflies[i].x = points[pindices[i]].x;
-		butterflies[i].y = points[pindices[i]].y;
+		butterflies[i].x = ppoints[pindices[i]].x;
+		butterflies[i].y = ppoints[pindices[i]].y;
 	}
-
 }
 
 void drawButterfly (struct butterfly *bfly, uint8_t *canvas){
