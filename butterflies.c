@@ -39,7 +39,7 @@ bool butterfliesIntersect(struct butterfly bflyA, struct butterfly bflyB);
 void randomizeArray(int* arr, int arr_length, int limit);
 void paintSupports(uint8_t *canvas);
 void checkMove(struct butterfly *bfly);
-void drawDoneMessage(uint8_t *canvas);
+void drawDoneMessage(uint8_t *canvas, int count);
 void randomizeButterflies();
 int  compare_points(const void* a, const void* b);
 
@@ -69,6 +69,7 @@ int main(int argc, char **argv)
 
 void paintCanvas(uint8_t *canvas){
 	static int state = 0;
+	static int count = 1;
 	if(butterflies == NULL){ //one time initialization
 		initButterflies();
 	}
@@ -100,9 +101,10 @@ void paintCanvas(uint8_t *canvas){
 			if(butterflies[i].moving) allperched = false;
 		}
 		if(allperched){
-			drawDoneMessage(canvas);
+			drawDoneMessage(canvas, count);
 			if(++state == 20){ // show the done message for 20 MOVE_INTERVALs (~3 sec)
 				state = 0;
+				count++;
 				randomizeButterflies(); //re-randomize butterflies
 				if(++sclr == 8) // shuffle the perch colors
 					sclr = blue;
@@ -235,12 +237,12 @@ void checkMove(struct butterfly *bfly){
 			}
 		}
 	}
-
 }
 
 // self explanatory
-void drawDoneMessage(uint8_t *canvas){
-	char *mesg = "DONE!";
+void drawDoneMessage(uint8_t *canvas, int count){
+	char mesg [20];
+	sprintf(mesg, "DONE %d", count);
 	int msglen = strlen(mesg);
 	int i;
 	for(i=0;i<msglen;i++){
