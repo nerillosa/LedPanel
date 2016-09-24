@@ -20,6 +20,8 @@
 #define NUM_BUTTERFLIES 5
 #define BUTTERFLY_LENGTH 4
 
+static color sclr = blue;
+
 static struct butterfly {
    uint8_t pointsOffset;
    color headColor;
@@ -102,6 +104,9 @@ void paintCanvas(uint8_t *canvas){
 			if(++state == 20){ // show the done message for 20 MOVE_INTERVALs (~3 sec)
 				state = 0;
 				randomizeButterflies(); //re-randomize butterflies
+				if(++sclr == 8) // shuffle the perch colors
+					sclr = blue;
+
 			}
 
 		}
@@ -111,7 +116,7 @@ void paintCanvas(uint8_t *canvas){
 // renders all the perching points and colors them
 void paintSupports(uint8_t *canvas){
 	int i;
-	color clr = blue;
+	color clr = sclr;
 	for(i=0;i<slen;i++){
 		if(i%9 == 0){ // each perch has nine points total
 			if(++clr == 8) // seven colors
@@ -157,16 +162,16 @@ void randomizeButterflies(){
 void drawButterfly (struct butterfly *bfly, uint8_t *canvas){
 	Point *point = points + bfly->pointsOffset * POINTS_PER_BUTTERFLY;
 	int i;
-	color clr;
+	color clrr;
 	for(i=0;i<POINTS_PER_BUTTERFLY;i++){
 		if((point + i) ->x ==1 && (point + i) ->y == 1){ // {1,1} the head
-			clr = bfly->headColor;
+			clrr = bfly->headColor;
 		}else{
-			clr = bfly->wingColor;
+			clrr = bfly->wingColor;
 		}
-		drawPixel((point + i) ->x + bfly->x, (point + i) ->y + bfly->y, clr, canvas);
+		drawPixel((point + i) ->x + bfly->x, (point + i) ->y + bfly->y, clrr, canvas);
 		//check if a butterfly head landed on a perch point
-		if(clr == bfly->headColor && bfly->moving) checkMove(bfly);
+		if(clrr == bfly->headColor && bfly->moving) checkMove(bfly);
 	}
 }
 
