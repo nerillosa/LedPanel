@@ -44,6 +44,7 @@ struct news newsTitles;
 int numLines;
 int strlength;
 char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
+//char* categories[] = {"latest", "politics", "scitech", "entertainment"};
 
 int main(int argc, char **argv)
 {

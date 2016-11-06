@@ -51,31 +51,52 @@ int main(int argc, char **argv)
 	}
 
 	tree = mxmlLoadFile(NULL, fptr, MXML_TEXT_CALLBACK);
-
 	mxml_node_t *node, *titleNode;
 	node = mxmlFindElement(tree, tree, "item", NULL, NULL, MXML_DESCEND);
 
 	titleNode = mxmlFindElement(node, tree, "title", NULL, NULL, MXML_DESCEND);
 	titleNode = mxmlGetFirstChild(titleNode);
-	fprintf(tptr, "%s", mxmlGetText(titleNode, &whitespace));
+	int type = mxmlGetType(titleNode);
+        if(type == MXML_TEXT)
+		fprintf(tptr, "%s", mxmlGetText(titleNode, &whitespace));
+	else{
+		fprintf(tptr, "%s", mxmlGetCDATA(titleNode));
+
+		printf("%s\n", mxmlGetCDATA(titleNode));
+	}
+
 	while(1){
 		titleNode = mxmlGetNextSibling(titleNode);
 		if(titleNode == NULL) break;
 		fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
 	}
+
 	fprintf(tptr, "\n");
 
 	node = mxmlGetNextSibling(node);
+
 	while(node != NULL){
 		titleNode = mxmlFindElement(node, tree, "title", NULL, NULL, MXML_DESCEND);
 		titleNode = mxmlGetFirstChild(titleNode);
-		if(titleNode != NULL)
-			fprintf(tptr, "%s", mxmlGetText(titleNode, &whitespace));
+		if(titleNode != NULL){
+			int type = mxmlGetType(titleNode);
+       			if(type == MXML_TEXT)
+				fprintf(tptr, "%s", mxmlGetText(titleNode, &whitespace));
+			else{
+				fprintf(tptr, "%s", mxmlGetCDATA(titleNode));
+			}
+		}
 		while(1){
 			titleNode = mxmlGetNextSibling(titleNode);
 			if(titleNode == NULL) break;
-			fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
+                        int type = mxmlGetType(titleNode);
+                        if(type == MXML_TEXT)
+                                fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
+                        else{
+                                fprintf(tptr, " %s", mxmlGetCDATA(titleNode));
+                        }
 		}
+
 		node = mxmlGetNextSibling(node);
 		node = mxmlGetNextSibling(node);
 		if(node != NULL)
