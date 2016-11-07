@@ -185,8 +185,6 @@ void refreshFeed(){
 		if (execve("./parseXml", args, NULL) == -1) {
 			/* Handle error */
 			printf("execve returned -1\n");
-			printf("next category because this category failed\n");
-			foxurls = foxurls -> next; //next category because this category failed
 			_Exit(127);
 		}
 	}

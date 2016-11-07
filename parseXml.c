@@ -26,16 +26,26 @@ int main(int argc, char **argv)
 	}
 
     	FILE *fptr, *tptr;
-
+	/*  open for writinging */
         fptr = fopen("feed.xml", "w");
+	if (fptr == NULL){
+		printf("%s:Could not open file feed.xml for writing \n", argv[0]);
+		return 1;
+	}
+
+
 	download_feed(fptr, url);
 	fclose(fptr);
 
 	mxml_node_t *tree;
 
 	int whitespace = 0;
-	/*  open for writing */
+	/*  open for reading */
 	fptr = fopen("feed.xml", "r");
+	if (fptr == NULL){
+		printf("Could not open file feed.xml for reading \n");
+		return 1;
+	}
 
 	if(peekFile(fptr) == -1){
                 printf("file is not an xml file: %s\n", url);
@@ -45,8 +55,8 @@ int main(int argc, char **argv)
 
 	tptr = fopen("feed.txt", "w");
 
-	if (fptr == NULL || tptr == NULL){
-		printf("%s:Could not open file feed.txt \n", argv[0]);
+	if (tptr == NULL){
+		printf("Could not open file feed.txt for writing \n");
 		return 1;
 	}
 
@@ -61,8 +71,6 @@ int main(int argc, char **argv)
 		fprintf(tptr, "%s", mxmlGetText(titleNode, &whitespace));
 	else{
 		fprintf(tptr, "%s", mxmlGetCDATA(titleNode));
-
-		printf("%s\n", mxmlGetCDATA(titleNode));
 	}
 
 	while(1){
@@ -89,12 +97,12 @@ int main(int argc, char **argv)
 		while(1){
 			titleNode = mxmlGetNextSibling(titleNode);
 			if(titleNode == NULL) break;
-                        int type = mxmlGetType(titleNode);
-                        if(type == MXML_TEXT)
+//                        int type = mxmlGetType(titleNode);
+//                        if(type == MXML_TEXT)
                                 fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
-                        else{
-                                fprintf(tptr, " %s", mxmlGetCDATA(titleNode));
-                        }
+//                        else{
+//                                fprintf(tptr, " %s", mxmlGetCDATA(titleNode));
+//                        }
 		}
 
 		node = mxmlGetNextSibling(node);
