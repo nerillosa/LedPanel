@@ -6,12 +6,7 @@
 
 #include <sys/time.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
 #include <stdint.h>
 

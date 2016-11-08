@@ -67,9 +67,7 @@ int refreshFeed(char *url)
 		fprintf(tptr, "%s", mxmlGetCDATA(titleNode));
 	}
 
-	while(1){
-		titleNode = mxmlGetNextSibling(titleNode);
-		if(titleNode == NULL) break;
+	while((titleNode = mxmlGetNextSibling(titleNode))){
 		fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
 	}
 
@@ -88,9 +86,7 @@ int refreshFeed(char *url)
 				fprintf(tptr, "%s", mxmlGetCDATA(titleNode));
 			}
 		}
-		while(1){
-			titleNode = mxmlGetNextSibling(titleNode);
-			if(titleNode == NULL) break;
+		while((titleNode = mxmlGetNextSibling(titleNode))){
 			fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
 		}
 
