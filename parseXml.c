@@ -1,13 +1,11 @@
 /*
- * C program that gets rss feed from Fox and extracts the titles
+ * C function that gets rss feed from Fox and extracts the titles
  * There might be easier ways of doing this but this program
  * creates two files: feed.xml and feed.txt
+ * Uses two external libraries that need to be installed:
+ * libcurl and mini-XML
  * The xml file is the direct feed from the host's website.
- * The text file is the extracted titles, one on each line.
- * To run this program you will need to install libCurl and Mini-XML version 2.9
- * To make it work I had to copy (once installed) the mini-XML shared library (.so) from
- * /usr/local/lib to /usr/lib because the compiler was not finding it.
- *
+ * The text file contains the extracted titles, one on each line.
  * To compile: gcc -o parseXml parseXml.c -lmxml -lcurl -pthread
  */
 #include <stdio.h>
