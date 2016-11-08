@@ -14,22 +14,18 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 #include <mxml.h>
+#include "parseXml.h"
 
-void download_feed(FILE *dst, const char *src);
-int peekFile(FILE *dst);
+static void download_feed(FILE *dst, const char *src);
+static int peekFile(FILE *dst);
 
-int main(int argc, char **argv)
+int refreshFeed(char *url)
 {
-	char *url = "http://feeds.foxnews.com/foxnews/world?format=xml";
-	if(argc > 1){
-		url = argv[1];
-	}
-
     	FILE *fptr, *tptr;
 	/*  open for writinging */
         fptr = fopen("feed.xml", "w");
 	if (fptr == NULL){
-		printf("%s:Could not open file feed.xml for writing \n", argv[0]);
+		printf("%s:Could not open file feed.xml for writing \n", url);
 		return 1;
 	}
 
@@ -97,12 +93,7 @@ int main(int argc, char **argv)
 		while(1){
 			titleNode = mxmlGetNextSibling(titleNode);
 			if(titleNode == NULL) break;
-//                        int type = mxmlGetType(titleNode);
-//                        if(type == MXML_TEXT)
-                                fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
-//                        else{
-//                                fprintf(tptr, " %s", mxmlGetCDATA(titleNode));
-//                        }
+			fprintf(tptr, " %s", mxmlGetText(titleNode, &whitespace));
 		}
 
 		node = mxmlGetNextSibling(node);

@@ -1,7 +1,7 @@
 // rssFeedTicker.c
-// Running this program shows FOX Rss news feeds scrolling from right to left. 
-// After installing bcm2835, you can build and run this with:
-// gcc -o rssFeedTicker -l rt rssFeedTicker.c lcdshapes.c -l bcm2835
+// Running this program shows FOX Rss news feeds scrolling from right to left.
+// After installing bcm2835,libcurl, and mini-Xml, you can build and run this with:
+// gcc -o rssFeedTicker rssFeedTicker.c lcdshapes.c parseXml.c -lrt -lbcm2835 -lmxml -lcurl -pthread
 // sudo ./rssFeedTicker
 
 #include <sys/time.h>
@@ -17,6 +17,7 @@
 
 #include "lcdshapes.h"
 #include "lcdfonts.h"
+#include "parseXml.h"
 
 #define MOVE_INTERVAL  30  // time in milliseconds between each move
 
@@ -31,7 +32,6 @@ static struct urls {
  struct urls *next;
 } *foxurls = NULL;
 
-void refreshFeed();
 void getNews(struct news *newsTitles);
 void paintCanvas(uint8_t *canvas);
 void getUrls();
@@ -44,7 +44,6 @@ struct news newsTitles;
 int numLines;
 int strlength;
 char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
-//char* categories[] = {"latest", "politics", "scitech", "entertainment"};
 
 int main(int argc, char **argv)
 {
@@ -52,7 +51,11 @@ int main(int argc, char **argv)
 		return 1;
 
 	getUrls();
-	refreshFeed();
+
+	while(refreshFeed(foxurls -> url)){
+		foxurls = foxurls -> next;
+	}
+
 	newsTitles.titles = NULL;
 	getNews(&newsTitles);
 	numLines = newsTitles.size;
@@ -90,7 +93,9 @@ void paintCanvas(uint8_t *canvas){
 				if(++lineCounter == numLines) { //refresh feed after all titles have scrolled
 					lineCounter = 0;
 					foxurls = foxurls -> next; //next category
-					refreshFeed();
+					while(refreshFeed(foxurls -> url)){ //advance to next url if refresh news category fails
+						foxurls = foxurls -> next;
+					}
 					getNews(&newsTitles);
 					numLines = newsTitles.size;
 					titles = (char **)newsTitles.titles;
@@ -155,45 +160,6 @@ void getNews(struct news *newsTitles){
 	newsTitles -> size = nlines;
 
 	fclose(file);
-}
-
-void refreshFeed(){
-	pid_t pid;
-	int status;
-	pid_t ret;
-	char *const args[3] = {"./parseXml", foxurls -> url, NULL};
-	//char **env;
-	extern char **environ;
-
-	pid = fork();
-	if (pid == -1) {
-		/* Handle error */
-		printf("fork failed\n");
-	} else if (pid != 0) { //this is the parent
-		while ((ret = waitpid(pid, &status, 0)) == -1) {
-			if (errno != EINTR) {
-				/* Handle error */
-				printf("errno != EINTR: %d\n", errno);
-				break;
-			}
-		}
-		if ((ret != -1) && (!WIFEXITED(status) || !WEXITSTATUS(status)) ) {
-			/* Report unexpected child status */
-			printf("Unexpected child status:%d\n", status);
-		}
-	} else { //this is the child
-		if (execve("./parseXml", args, NULL) == -1) {
-			/* Handle error */
-			printf("execve returned -1\n");
-			_Exit(127);
-		}
-	}
-
-//	char line[256];
-//	memset(line, 0, 256);
-//	strcpy(line, "sudo ./parseXml ");
-//	strcat(line, foxurls -> url);
-//	system(line);
 }
 
 void getUrls(){
