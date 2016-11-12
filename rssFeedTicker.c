@@ -1,7 +1,7 @@
 // rssFeedTicker.c
 // Running this program shows FOX Rss news feeds scrolling from right to left.
-// After installing bcm2835,libcurl, and mini-Xml, you can build and run this with:
-// gcc -o rssFeedTicker rssFeedTicker.c lcdshapes.c parseXml.c -lrt -lbcm2835 -lmxml -lcurl -pthread
+// After installing bcm2835 and libcurl, you can build and run this with:
+// gcc -o rssFeedTicker rssFeedTicker.c lcdshapes.c parseXml.c -lrt -lbcm2835 -lcurl -lpthread
 // sudo ./rssFeedTicker
 
 #include <sys/time.h>
@@ -21,9 +21,13 @@ struct news {
   int size;
 };
 
-static struct urls {
+struct newsAgency{
  char name[10];
  char *url;
+};
+
+static struct urls {
+ struct newsAgency agency;
  struct urls *next;
 } *foxurls = NULL;
 
@@ -38,7 +42,8 @@ char *mesg;
 struct news newsTitles;
 int numLines;
 int strlength;
-char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
+struct newsAgency politics[] = {{"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},{"REUTER","http://feeds.reuters.com/Reuters/PoliticsNews"}};
+//char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
 
 int main(int argc, char **argv)
 {
@@ -47,7 +52,7 @@ int main(int argc, char **argv)
 
 	getUrls();
 
-	while(refreshFeed(foxurls -> url)){
+	while(refreshFeed(foxurls -> agency.url)){
 		foxurls = foxurls -> next;
 	}
 
@@ -88,7 +93,7 @@ void paintCanvas(uint8_t *canvas){
 				if(++lineCounter == numLines) { //refresh feed after all titles have scrolled
 					lineCounter = 0;
 					foxurls = foxurls -> next; //next category
-					while(refreshFeed(foxurls -> url)){ //advance to next url if refresh news category fails
+					while(refreshFeed(foxurls -> agency.url)){ //advance to next url if refresh news category fails
 						foxurls = foxurls -> next;
 					}
 					getNews(&newsTitles);
@@ -100,7 +105,7 @@ void paintCanvas(uint8_t *canvas){
 			}
 		}
 		int i=0;
-		char *namee = foxurls -> name;
+		char *namee = foxurls -> agency.name;
 		int namelen = strlen(namee);
         	for(i=0;i<namelen;i++){
               		drawLetter(*(namee+i), LETTER_WIDTH*i, 0, red, canvas);
@@ -158,23 +163,12 @@ void getNews(struct news *newsTitles){
 }
 
 void getUrls(){
-	int lenn = sizeof(categories)/sizeof(categories[0]);
+	int lenn = sizeof(politics)/sizeof(politics[0]);
 	foxurls = (struct urls *)calloc(lenn, sizeof(struct urls));
 	int i;
 	for(i=0;i<lenn;i++){
-		char line[256];
-		memset(line, 0, 256);
-		strcpy(line, "http://feeds.foxnews.com/foxnews/" );
-		strcat(line, categories[i]);
-		strcat(line, "?format=xml");
-		foxurls[i].url = malloc(strlen(line) +1);
-		strcpy(foxurls[i].url, line);
+		strcpy(foxurls[i].agency.name, politics[i].name);
+		foxurls[i].agency.url = strdup(politics[i].url);
 		foxurls[i].next = &foxurls[(i+1)%lenn]; // circular linked list
-		int j = 0;
-		char *category = categories[i];
-                while(category[j] && j<6){ // max 6 chars to give space for numlines
-			foxurls[i].name[j] = toupper(category[j]);
-			j++;
-                }
 	}
 }
