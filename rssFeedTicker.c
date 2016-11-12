@@ -1,5 +1,5 @@
 // rssFeedTicker.c
-// Running this program shows FOX Rss news feeds scrolling from right to left.
+// Running this program shows FOX and REUTERS politics feeds titles scrolling from right to left.
 // After installing bcm2835 and libcurl, you can build and run this with:
 // gcc -o rssFeedTicker rssFeedTicker.c lcdshapes.c parseXml.c -lrt -lbcm2835 -lcurl -lpthread
 // sudo ./rssFeedTicker
