@@ -42,7 +42,14 @@ char *mesg;
 struct news newsTitles;
 int numLines;
 int strlength;
-struct newsAgency politics[] = {{"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},{"REUTER","http://feeds.reuters.com/Reuters/PoliticsNews"}};
+struct newsAgency politics[] = {
+                               {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
+                               {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
+                               {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
+                               {"BBC","http://feeds.bbci.co.uk/news/politics/rss.xml"},
+                               {"ABC","http://feeds.abcnews.com/abcnews/politicsheadlines"},
+                               };
+
 //char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
 
 int main(int argc, char **argv)
@@ -113,7 +120,7 @@ void paintCanvas(uint8_t *canvas){
 		char letra[10];
 		memset(letra, 0, 10);
 		letra[0] = ' ';
-		sprintf(&letra[1], "%d", numLines - lineCounter);
+		sprintf(&letra[(namelen<7 || numLines-lineCounter<10) ? 1 : 0], "%d", numLines - lineCounter);
 		int k = 0;
 		for(k=0;k<strlen(letra);k++,i++){
 			drawLetter(*(letra+k), LETTER_WIDTH*i, 0, red, canvas);
@@ -146,14 +153,14 @@ void getNews(struct news *newsTitles){
 	char **news = malloc(100 * sizeof(char*)); // 100 titles of 256 chars each
 	int nlines = 0;
 
-	while (fgets(line, sizeof(line), file)) {
+	while (fgets(line, sizeof(line), file) && nlines < 100) {
 		int i = 0;
 		while(line[i]){
 			line[i] = toupper(line[i]);
 			i++;
 		}
-		news[nlines] = malloc(strlen(line) +1);
-		strcpy(news[nlines++], line);
+		news[nlines++] = strdup(line);
+		line[255]= '\0'; // just in case
 	}
 
 	newsTitles -> titles = news;
