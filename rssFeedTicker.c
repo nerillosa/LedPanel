@@ -1,5 +1,5 @@
 // rssFeedTicker.c
-// Running this program shows FOX and REUTERS politics feeds titles scrolling from right to left.
+// Running this program shows FOX,REUTERS,CNN, etc. politics feeds titles scrolling from right to left.
 // After installing bcm2835 and libcurl, you can build and run this with:
 // gcc -o rssFeedTicker rssFeedTicker.c lcdshapes.c parseXml.c -lrt -lbcm2835 -lcurl -lpthread
 // sudo ./rssFeedTicker
@@ -43,6 +43,7 @@ struct news newsTitles;
 int numLines;
 int strlength;
 struct newsAgency politics[] = {
+ //                              {"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
                                {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
                                {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
                                {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
