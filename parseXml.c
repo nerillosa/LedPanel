@@ -1,9 +1,8 @@
 /*
  * C function that gets rss feeds from various news agencies and extracts the titles
- * The program creates two files: feed.xml and feed.txt
- * Uses libcurl open source library to download the feed.
- * The xml file is the direct feed from the host's website.
- * The text file contains the extracted titles, one on each line.
+ * Uses libcurl open source library to download feed.xml
+ * The function accounts that the file downloaded is not necessarily a xml file, may not be "proper"
+ * The text file feed.txt created contains the extracted titles, one on each line.
 */
 
 #include <stdio.h>
@@ -56,7 +55,7 @@ int refreshFeed(char *url)
 		return 1;
 	}
 
-        int state=0,i=0,j=0,pos=0, k;
+        int state=OUT,i=0,j=0,pos=0, k;
         char a;
 	char buffer[512];
         char identifier[12];
@@ -68,16 +67,16 @@ int refreshFeed(char *url)
                         identifier[k-1] = identifier[k];
                 }
                 identifier[k-1]=a;
-                if(state==0){
+                if(state==OUT){
                         if(strstr(identifier, "<title>") != NULL){
-                                state=1;
+                                state=IN;
 				pos=0;
                         }
                 }
-                else if(state ==1){
+                else if(state ==IN){
                         buffer[pos++] = a;
                         if(strstr(identifier, "</title>") != NULL){
-                                state=0;
+                                state=OUT;
 				buffer[pos] = '\0';
 				getTitle(buffer);
 				if(countWords(buffer)>5){ // skip trivial titles
@@ -113,42 +112,34 @@ int fsize(const char *filename) {
 void getTitle(char *line){
         static char *suffix = "</TITLE>";
 	static char *cdata = "<![CDATA[";
+	static char *watch = "WATCH:";
 	int i =0;
-	while(line[i]){
-		line[i] = toupper(line[i]);
+	static char buff[512];
+	while(line[i] && i<512){
+		buff[i] = toupper(line[i]);
 		i++;
 	}
-        char *p1 = &line[0];
-        char *p2 = strstr(line, suffix);
+	buff[i-strlen(suffix)] = '\0'; //remove suffix
 
-        p1 += (strstr(line, cdata)? strlen(cdata) : 0);
-        if(p2 && p2>p1){
-                for(i=0;i<(p2-p1);i++){
-                   line[i] = *(p1+i);
-                }
-                line[i] = 0;
-        }else{
-                line[0] = 0;
-        }
+        char *p1 = &buff[0];
+
+        if(strstr(p1, cdata) == p1){ // starts with cdata
+		p1 += strlen(cdata);
+	}
+
+        if(strstr(p1, watch) == p1){ // starts with watch
+		p1 += strlen(cdata);
+	}
 
 	int k=0;
-	char *bandido = NULL;
+	while(isspace(p1[k])) k++; //get rid of leading whitespace
+	p1 += k;
 
-	if(strstr(line, "WATCH:") == &line[0]){ // starts with WATCH:
-		bandido = strdup(&line[0]+6);
-		while(isspace(bandido[k])) k++;
-		strcpy(line, bandido+k);
-		free(bandido);
-		return;
-	}
+        if(strstr(p1, "]]>") == p1+strlen(p1)-3){ // ends with ]]>
+		p1[strlen(p1)-3] = '\0';
+        }
 
-	while(isspace(line[k])) k++; //get rid of leading whitespace
-
-	if(k){
-		bandido = strdup(&line[0]+k);
-		strcpy(line, bandido);
-		free(bandido);
-	}
+	strcpy(line, p1);
 }
 
 
@@ -166,16 +157,12 @@ int countWords(char *str)
         if (*str == ' ' || *str == '\n' || *str == '\t')
             state = OUT;
 
-        // If next character is not a word separator and
-        // state is OUT, then set the state as IN and
-        // increment word count
         else if (state == OUT)
         {
             state = IN;
             ++wc;
         }
 
-        // Move to next character
         ++str;
     }
     return wc;
