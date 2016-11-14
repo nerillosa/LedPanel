@@ -1,7 +1,6 @@
 /*
- * C function that gets rss feed from Fox and extracts the titles
- * There might be easier ways of doing this but this program
- * creates two files: feed.xml and feed.txt
+ * C function that gets rss feeds from various news agencies and extracts the titles
+ * The program creates two files: feed.xml and feed.txt
  * Uses libcurl open source library to download the feed.
  * The xml file is the direct feed from the host's website.
  * The text file contains the extracted titles, one on each line.
@@ -15,19 +14,17 @@
 #include <sys/stat.h>
 #include "parseXml.h"
 
+#define OUT 0
+#define IN  1
+
 static void download_feed(FILE *dst, const char *src);
-//static int peekFile(FILE *dst);
+int countWords(char *str);
 static void getTitle(char *line);
 int fsize(const char *filename);
 
 int refreshFeed(char *url)
 {
     	FILE *fptr, *tptr;
-        char identifier[12];
-        memset(identifier, 0, 12);
-        char a;
-        int state=0;
-
 
 	/*  open for writing */
         fptr = fopen("feed.xml", "w");
@@ -35,7 +32,6 @@ int refreshFeed(char *url)
 		printf("%s:Could not open file feed.xml for writing \n", url);
 		return 1;
 	}
-
 
 	download_feed(fptr, url);
 	fclose(fptr);
@@ -45,7 +41,6 @@ int refreshFeed(char *url)
                 printf("%s:Could not stat size of feed.xml\n", "parseXml");
                 return 1;
         }
-
 
 	/*  open for reading */
 	fptr = fopen("feed.xml", "r");
@@ -61,12 +56,14 @@ int refreshFeed(char *url)
 		return 1;
 	}
 
-        int i=0,j=0;
-	int pos = 0;
+        int state=0,i=0,j=0,pos=0, k;
+        char a;
 	char buffer[512];
+        char identifier[12];
+        memset(identifier, 0, 12);
+
         do { //this do loop will find all the text in between title tags
                 a = fgetc(fptr);
-                int k;
                 for(k=1;k<11;k++){
                         identifier[k-1] = identifier[k];
                 }
@@ -82,7 +79,7 @@ int refreshFeed(char *url)
                         if(strstr(identifier, "</title>") != NULL){
                                 state=0;
 				buffer[pos] = '\0';
-				if(++i>2){ // skip the first two titles
+				if(countWords(buffer)>5){ // skip trivial titles
 					getTitle(buffer);
 					fprintf(tptr, "%s\n", buffer);
 				}
@@ -152,7 +149,34 @@ void getTitle(char *line){
 		strcpy(line, bandido);
 		free(bandido);
 	}
-
-
 }
 
+
+// returns number of words in str
+int countWords(char *str)
+{
+    int state = OUT;
+    int wc = 0;  // word count
+
+    // Scan all characters one by one
+    while (*str)
+    {
+        // If next character is a separator, set the
+        // state as OUT
+        if (*str == ' ' || *str == '\n' || *str == '\t')
+            state = OUT;
+
+        // If next character is not a word separator and
+        // state is OUT, then set the state as IN and
+        // increment word count
+        else if (state == OUT)
+        {
+            state = IN;
+            ++wc;
+        }
+
+        // Move to next character
+        ++str;
+    }
+    return wc;
+}

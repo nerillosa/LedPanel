@@ -43,12 +43,12 @@ struct news newsTitles;
 int numLines;
 int strlength;
 struct newsAgency politics[] = {
+                               {"BBC","http://feeds.bbci.co.uk/news/politics/rss.xml"},
                                {"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
                                {"ABC","http://feeds.abcnews.com/abcnews/politicsheadlines"},
                                {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
                                {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
                                {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
-                               {"BBC","http://feeds.bbci.co.uk/news/politics/rss.xml"},
                                };
 
 //char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
