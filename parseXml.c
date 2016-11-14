@@ -79,8 +79,8 @@ int refreshFeed(char *url)
                         if(strstr(identifier, "</title>") != NULL){
                                 state=0;
 				buffer[pos] = '\0';
+				getTitle(buffer);
 				if(countWords(buffer)>5){ // skip trivial titles
-					getTitle(buffer);
 					fprintf(tptr, "%s\n", buffer);
 				}
                         }
