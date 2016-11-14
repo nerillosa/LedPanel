@@ -17,9 +17,9 @@
 #define IN  1
 
 static void download_feed(FILE *dst, const char *src);
-int countWords(char *str);
+static int countWords(char *str);
 static void getTitle(char *line);
-int fsize(const char *filename);
+static int fsize(const char *filename);
 
 int refreshFeed(char *url)
 {
@@ -113,8 +113,9 @@ void getTitle(char *line){
         static char *suffix = "</TITLE>";
 	static char *cdata = "<![CDATA[";
 	static char *watch = "WATCH:";
-	int i =0;
 	static char buff[512];
+
+	int i =0;
 	while(line[i] && i<512){
 		buff[i] = toupper(line[i]);
 		i++;
