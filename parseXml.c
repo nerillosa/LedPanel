@@ -1,7 +1,7 @@
 /*
  * C function that gets rss feeds from various news agencies and extracts the titles
  * Uses libcurl open source library to download feed.xml
- * The function accounts that the file downloaded is not necessarily a xml file, may not be "proper"
+ * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
  * The text file feed.txt created contains the extracted titles, one on each line.
 */
 
@@ -61,12 +61,12 @@ int refreshFeed(char *url)
         char identifier[12];
         memset(identifier, 0, 12);
 
-        do { //this do loop will find all the text in between title tags
+        do { //this do loop will capture all the texts in between title tags
                 a = fgetc(fptr);
-                for(k=1;k<11;k++){
+                for(k=1;k<11;k++){ //shift left
                         identifier[k-1] = identifier[k];
                 }
-                identifier[k-1]=a;
+                identifier[k-1]=a; // add new char at the right end
                 if(state==OUT){
                         if(strstr(identifier, "<title>") != NULL){
                                 state=IN;
@@ -129,7 +129,7 @@ void getTitle(char *line){
 	}
 
         if(strstr(p1, watch) == p1){ // starts with watch
-		p1 += strlen(cdata);
+		p1 += strlen(watch);
 	}
 
 	int k=0;
