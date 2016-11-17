@@ -16,11 +16,6 @@
 
 #define MOVE_INTERVAL  30  // time in milliseconds between each move
 
-struct news {
-  void *titles;
-  int size;
-};
-
 struct newsAgency{
  char name[10];
  char *url;
@@ -31,7 +26,6 @@ static struct urls {
  struct urls *next;
 } *foxurls = NULL;
 
-void getNews(struct news *newsTitles);
 void paintCanvas(uint8_t *canvas);
 void getUrls();
 
@@ -43,15 +37,14 @@ struct news newsTitles;
 int numLines;
 int strlength;
 struct newsAgency politics[] = {
+                               {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
                                {"BBC","http://feeds.bbci.co.uk/news/politics/rss.xml"},
                                {"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
                                {"ABC","http://feeds.abcnews.com/abcnews/politicsheadlines"},
                                {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
                                {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
-                               {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
                                };
 
-//char* categories[] = {"health", "business", "national", "world", "latest", "politics", "scitech", "entertainment"};
 
 int main(int argc, char **argv)
 {
@@ -60,12 +53,12 @@ int main(int argc, char **argv)
 
 	getUrls();
 
-	while(refreshFeed(foxurls -> agency.url)){
+	newsTitles.titles = NULL;
+
+	while(refreshFeed(foxurls -> agency.url, &newsTitles)){
 		foxurls = foxurls -> next;
 	}
 
-	newsTitles.titles = NULL;
-	getNews(&newsTitles);
 	numLines = newsTitles.size;
 	titles = (char **)newsTitles.titles;
         mesg = titles[0];
@@ -101,10 +94,9 @@ void paintCanvas(uint8_t *canvas){
 				if(++lineCounter == numLines) { //refresh feed after all titles have scrolled
 					lineCounter = 0;
 					foxurls = foxurls -> next; //next category
-					while(refreshFeed(foxurls -> agency.url)){ //advance to next url if refresh news category fails
+					while(refreshFeed(foxurls -> agency.url, &newsTitles)){ //advance to next url if refresh news category fails
 						foxurls = foxurls -> next;
 					}
-					getNews(&newsTitles);
 					numLines = newsTitles.size;
 					titles = (char **)newsTitles.titles;
 				}
@@ -130,44 +122,6 @@ void paintCanvas(uint8_t *canvas){
               		drawLetter(*(mesg+i), moveOffset + LETTER_WIDTH*i, 9, clr, canvas);
 	      	}
 	}
-}
-
-void getNews(struct news *newsTitles){
-	int j = 0;
-	if(newsTitles -> titles != NULL){ //free all the allocated memory
-		char **titless = (char **)(newsTitles -> titles);
-		for(j=0;j<newsTitles -> size; j++){
-			free(titless[j]);
-		}
-		free(newsTitles -> titles);
-	}
-	char* fileName = "feed.txt";
-	FILE* file = fopen(fileName, "r");
-        if (file == NULL){
-                printf("Could not open feed file \n");
-                return;
-        }
-
-	char line[256];
-	memset(line, 0, 256);
-
-	char **news = malloc(100 * sizeof(char*)); // 100 titles of 256 chars each
-	int nlines = 0;
-
-	while (fgets(line, sizeof(line), file) && nlines < 100) {
-		int i = 0;
-		while(line[i]){
-			line[i] = toupper(line[i]);
-			i++;
-		}
-		news[nlines++] = strdup(line);
-		line[255]= '\0'; // just in case
-	}
-
-	newsTitles -> titles = news;
-	newsTitles -> size = nlines;
-
-	fclose(file);
 }
 
 void getUrls(){

@@ -2,7 +2,6 @@
  * C function that gets rss feeds from various news agencies and extracts the titles
  * Uses libcurl open source library to download feed.xml
  * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
- * The text file feed.txt created contains the extracted titles, one on each line.
 */
 
 #include <stdio.h>
@@ -15,15 +14,26 @@
 
 #define OUT 0
 #define IN  1
+#define MAX_TITLES 100
+#define BUFFER_SIZE 512
 
 static void download_feed(FILE *dst, const char *src);
 static int countWords(char *str);
 static void getTitle(char *line);
 static int fsize(const char *filename);
 
-int refreshFeed(char *url)
+int refreshFeed(char *url, struct news *newsTitles)
 {
-    	FILE *fptr, *tptr;
+        int k = 0;
+        if(newsTitles -> titles != NULL){ //free all the allocated memory
+                char **titless = (char **)(newsTitles -> titles);
+                for(k=0;k<newsTitles -> size; k++){
+                        free(titless[k]);
+                }
+                free(newsTitles -> titles);
+        }
+
+    	FILE *fptr;
 
 	/*  open for writing */
         fptr = fopen("feed.xml", "w");
@@ -48,16 +58,12 @@ int refreshFeed(char *url)
 		return 1;
 	}
 
-	tptr = fopen("feed.txt", "w");
+        char **news = malloc(MAX_TITLES * sizeof(char*)); // MAX_TITLES titles of BUFFER_SIZE chars each
+        int nlines = 0;
 
-	if (tptr == NULL){
-		printf("Could not open file feed.txt for writing \n");
-		return 1;
-	}
-
-        int state=OUT,i=0,j=0,pos=0, k;
+        int state=OUT,i=0,j=0,pos=0;
         char a;
-	char buffer[512];
+	char buffer[BUFFER_SIZE];
         char identifier[12];
         memset(identifier, 0, 12);
 
@@ -74,21 +80,25 @@ int refreshFeed(char *url)
                         }
                 }
                 else if(state ==IN){
-                        buffer[pos++] = a;
+			if(pos<BUFFER_SIZE-1){
+				buffer[pos++] = a;
+			}
                         if(strstr(identifier, "</title>") != NULL){
                                 state=OUT;
 				buffer[pos] = '\0';
 				getTitle(buffer);
-				if(countWords(buffer)>5){ // skip trivial titles
-					fprintf(tptr, "%s\n", buffer);
+				if(countWords(buffer)>4 && nlines<MAX_TITLES){ // skip trivial titles
+			                news[nlines++] = strdup(buffer);
 				}
                         }
                 }
 
         } while (a != EOF && ++j<fileSize);// some files don't have EOF
 
+        newsTitles -> titles = news;
+        newsTitles -> size = nlines;
+
 	fclose(fptr);
-	fclose(tptr);
 	return 0;
 }
 
@@ -108,15 +118,14 @@ int fsize(const char *filename) {
     return -1;
 }
 
-
 void getTitle(char *line){
         static char *suffix = "</TITLE>";
 	static char *cdata = "<![CDATA[";
 	static char *watch = "WATCH:";
-	static char buff[512];
+	static char buff[BUFFER_SIZE];
 
 	int i =0;
-	while(line[i] && i<512){
+	while(line[i] && i<BUFFER_SIZE){
 		buff[i] = toupper(line[i]);
 		i++;
 	}
@@ -142,7 +151,6 @@ void getTitle(char *line){
 
 	strcpy(line, p1);
 }
-
 
 // returns number of words in str
 int countWords(char *str)
