@@ -38,13 +38,13 @@ int numLines;
 int strlength;
 struct newsAgency politics[] = {
                                {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
-                               {"BBC","http://feeds.bbci.co.uk/news/politics/rss.xml"},
+                               {"NYTIMES","http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"},
+                               {"W.POST","http://feeds.washingtonpost.com/rss/rss_powerpost"},
                                {"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
                                {"ABC","http://feeds.abcnews.com/abcnews/politicsheadlines"},
                                {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
                                {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
-                               };
-
+				};
 
 int main(int argc, char **argv)
 {

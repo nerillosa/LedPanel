@@ -49,13 +49,17 @@
 #define NCOLONF1 {0x00,0x10,0x10,0x00,0x10,0x10,0x00}   /* COLON */
 #define NPERIODF1 {0x00,0x00,0x00,0x00,0x00,0x00,0x40}   /* PERIOD */
 #define NSCOLONF1 {0x00,0x10,0x10,0x00,0x30,0x10,0x00}   /* SEMI COLON */
+#define NELLIPSISF1 {0x00,0x00,0x00,0x00,0x00,0x00,0x70}   /* ELLIPSIS */
+#define NQUOTESF1 {0x00,0x18,0x18,0x00,0x00,0x00,0x00}   /* QUOTES */
+
+
 #define N_F1 {0x00,0x00,0x00,0x00,0x00,0x00,0x00}   /* SPACE */
 
 #define LETTERS {AF1,BF1,CF1,DF1,EF1,FFF1,GF1,HF1,\
 	IF1,JF1,KF1,LF1,MF1,NF1,OF1,PF1,QF1,RF1,SF1,TF1,\
 	UF1,VF1,WF1,XF1,YF1,ZF1,N0F1,N1F1,N2F1,N3F1,N4F1,\
 	N5F1,N6F1,N7F1,N8F1,N9F1,NEXCF1,NQSTF1,NCOMMAF1,NDASHF1,\
-	NAPOSTRF1,NCOLONF1,NPERIODF1,NSCOLONF1,N_F1}
+	NAPOSTRF1,NCOLONF1,NPERIODF1,NSCOLONF1,NELLIPSISF1,NQUOTESF1,N_F1}
 
 #define GET_ALPHA(L) \
 	(L == 'A') ? letters[0] : (L == 'B') ? letters[1] :\
@@ -80,7 +84,8 @@
 	(L == ',') ? letters[38] : (L == '-') ? letters[39] :\
 	(L == '\'') ? letters[40] : (L == ':') ? letters[41] :\
 	(L == '.') ? letters[42] : (L == ';') ? letters[43] :\
-	letters[44]
+	(L == '~') ? letters[44] : (L == '"') ? letters[45] :\
+	letters[46]
 
 
 
