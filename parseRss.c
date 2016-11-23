@@ -12,16 +12,17 @@
 #include <curl/curl.h>
 #include <sys/stat.h>
 #include <time.h>
+#include "parseRss.h"
 
 #define OUT 0
 #define IN  1
 #define MAX_TITLES 100
 #define BUFFER_SIZE 8192
 
-struct hcodes{
-        char *hcode;
-        char value;
-} codes[] = {{"&#8211;",'-'},{"&#8212;",'-'},{"&#x2018;",'\''},{"&#x2019;",'\''},{"&#8216;",'\''},{"&#8217;",'\''},{"&#8220;",'"'},{"&#8221;",'"'},{"&#8230;",'~'},{"&#160;",' '}};
+struct newsAgency{
+ char name[10];
+ char *url;
+};
 
 struct news {
   char agency[10];
@@ -29,17 +30,10 @@ struct news {
   int size;
 };
 
-struct item{
-  char *title;
-  char agency[10];
-  char *pubDate;
-};
-
-struct newsAgency{
- char name[10];
- char *url;
-};
-
+struct hcodes{
+        char *hcode;
+        char value;
+} codes[] = {{"&#x2014;",'-'},{"&#8211;",'-'},{"&#8212;",'-'},{"&#x2018;",'\''},{"&#x2019;",'\''},{"&#8216;",'\''},{"&#8217;",'\''},{"&#8220;",'"'},{"&#8221;",'"'},{"&#8230;",'~'},{"&#160;",' '}};
 
 struct newsAgency politics[] = {
                                {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
@@ -50,9 +44,9 @@ struct newsAgency politics[] = {
                                {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
                                {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
                                 };
+
 int NUM_SITES = sizeof(politics)/sizeof(politics[0]);
 
-int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
 static void download_feed(FILE *dst, const char *src);
 static int countWords(char *str);
 static void getTitle(char *line);
@@ -61,43 +55,39 @@ static void cleanItem(char *line);
 static void cleanHtml(char * const line);  //line start is const
 static void fillItems(struct item **items, struct news newsItems);
 static char *getContent(char *starttag, char *endtag, char *text);
-int compare_pubDates(const void* a, const void* b);
+static int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
+static int compare_pubDates(const void* a, const void* b);
 
 struct news newsItems;
-
+static struct item *allItems = NULL;
 int currentSize = 0;
-struct item *allItems = NULL;
 
-int main(int argc, char **argv)
-{
-	int i;
-	for(i=0;i<NUM_SITES;i++){
-		refreshFeed(politics[i], &newsItems);
-		//printf("number of items for %s:%d\n", newsItems.agency, newsItems.size);
-		if(newsItems.items == NULL) continue;
-		struct item *items;
-		fillItems(&items, newsItems);
+void getLatestItems(int *size, struct item **allItemss){
+        int i;
+        for(i=0;i<NUM_SITES;i++){
+                refreshFeed(politics[i], &newsItems);
+                if(newsItems.items == NULL) continue;
+                struct item *items;
+                fillItems(&items, newsItems);
 
-		if(allItems == NULL){
-			allItems =  items;
-		}else{
-			allItems =  realloc(allItems, (currentSize + newsItems.size) * sizeof(struct item));
-			memcpy (allItems + currentSize, items, newsItems.size * sizeof(struct item));
-			free(items);
-			currentSize += newsItems.size;
-		}
-	}
-	printf("Total size is %d\n", currentSize);
+                if(allItems == NULL){
+                        allItems =  items;
+                }else{
+                        allItems =  realloc(allItems, (currentSize + newsItems.size) * sizeof(struct item));
+                        memcpy (allItems + currentSize, items, newsItems.size * sizeof(struct item));
+                        free(items);
+                        currentSize += newsItems.size;
+                }
+        }
 
-	qsort(allItems, currentSize, sizeof(struct item), compare_pubDates);
+	qsort(allItems, currentSize, sizeof(struct item), compare_pubDates); //sort with pubDate descending
 
-	for(i=0;i<currentSize;i++){
-		printf("%s;;%s;;%s\n", allItems[i].agency, allItems[i].pubDate, allItems[i].title);
+	for(i=0;i<20;i++){
+		puts(allItems[i].title);
 	}
 
-
-	//allItems and and each member pubDate/title need to be freed if this is going to be called again.
-	//Sat, 19 Nov 2016 16:52:37 GMT
+	*allItemss = allItems;
+	*size = currentSize;
 }
 
 int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
@@ -106,8 +96,7 @@ int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
         if(newsItems -> items != NULL){ //free all the allocated memory
                 char **itemss = (char **)(newsItems -> items);
                 for(k=0;k<newsItems -> size; k++){
-                        if(itemss[k])
-				free(itemss[k]);
+			free(itemss[k]);
                 }
                 free(newsItems -> items);
 		newsItems -> items = NULL;
@@ -167,7 +156,6 @@ int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
                                 state=OUT;
 				buffer[pos] = '\0';
 				cleanItem(buffer);
-//				getTitle(buffer);
 				if(countWords(buffer)>4 && nlines<MAX_TITLES){ // skip trivial titles
 					cleanHtml(buffer);
 			                news[nlines++] = strdup(buffer);
@@ -216,7 +204,7 @@ void getTitle(char *line){
 		buff[i] = toupper(line[i]);
 		i++;
 	}
-	buff[i-strlen(suffix)] = '\0'; //remove suffix
+	buff[i] = '\0';//terminate string
 
         char *p1 = &buff[0];
 
@@ -285,6 +273,7 @@ static void fillItems(struct item **itemss, struct news newsItems){
 		char *text = ((char **)newsItems.items)[i];
 		items[i].pubDate = getContent("<pubDate>", "</pubDate>", text);
 		items[i].title = getContent("<title>", "</title>", text);
+		getTitle(items[i].title);
 		strcpy(items[i].agency, newsItems.agency);
 	}
 	*itemss = items;
