@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	getLatestItems(&allItemsSize, &allItems);
 	mesg = allItems[0].title;
 	strlength = strlen(mesg);
-	numLines = NUM_TITLES<=allItemsSize? NUM_TITLES : allItemsSize;
+	numLines = NUM_TITLES;
 
 
 	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));

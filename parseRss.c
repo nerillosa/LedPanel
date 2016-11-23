@@ -4,7 +4,6 @@
  * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
 */
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +17,7 @@
 #define IN  1
 #define MAX_TITLES 100
 #define BUFFER_SIZE 8192
+#define  BUFFER_DELTA 100
 
 struct newsAgency{
  char name[10];
@@ -59,13 +59,21 @@ static int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
 static int compare_pubDates(const void* a, const void* b);
 static void cleanRssDateString(char *rssDateString);
 
-static struct news newsItems;
-static struct item *allItems = NULL;
-static int currentSize = 0;
 
 //this function gets exported in parseRss.h
 void getLatestItems(int *size, struct item **allItemss){
         int i;
+	int currentAllItemsUsed = 0;
+	static int currentAllItemsSize = 0;
+	static struct news newsItems;
+	static struct item *allItems = NULL;
+
+	if(*allItemss){
+		for(i=0;i< *size;i++){
+			free((*allItemss)[i].title); // free all the previous titles which were created by strdup
+		}
+	}
+
         for(i=0;i<NUM_SITES;i++){
                 refreshFeed(politics[i], &newsItems);
                 if(newsItems.items == NULL) continue;
@@ -74,19 +82,23 @@ void getLatestItems(int *size, struct item **allItemss){
 
                 if(allItems == NULL){
                         allItems =  items;
+			currentAllItemsUsed = currentAllItemsSize = newsItems.size;
                 }else{
-                        allItems =  realloc(allItems, (currentSize + newsItems.size) * sizeof(struct item));
-                        memcpy (allItems + currentSize, items, newsItems.size * sizeof(struct item));
-                        free(items);
-                        currentSize += newsItems.size;
+			if(newsItems.size > (currentAllItemsSize - currentAllItemsUsed)){
+	                        allItems =  realloc(allItems, (currentAllItemsSize + BUFFER_DELTA) * sizeof(struct item));
+                	        currentAllItemsSize += BUFFER_DELTA;
+			}
+       	                memcpy (allItems + currentAllItemsUsed, items, newsItems.size * sizeof(struct item));
+			currentAllItemsUsed += newsItems.size;
+                        free(items); // After previous memcpy it can be freed
                 }
         }
 
-	for(i=0;i<currentSize;i++){
+	for(i=0;i<currentAllItemsSize;i++){
 		cleanRssDateString(allItems[i].pubDate); // attempt to normalize all dates to GMT/UTC time
 	}
 
-	qsort(allItems, currentSize, sizeof(struct item), compare_pubDates); //sort by pubDate descending
+	qsort(allItems, currentAllItemsSize, sizeof(struct item), compare_pubDates); //sort by pubDate descending
 
 	for(i=0;i<20;i++){
 		printf("%s::",allItems[i].title);
@@ -95,7 +107,7 @@ void getLatestItems(int *size, struct item **allItemss){
 	}
 
 	*allItemss = allItems;
-	*size = currentSize;
+	*size = currentAllItemsSize;
 }
 
 void cleanRssDateString(char *rssDateString){
@@ -111,9 +123,9 @@ void cleanRssDateString(char *rssDateString){
 		if(diff){
 			tmA.tm_hour -= diff;
 			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
-			printf("before:%s\n", rssDateString);
+			//printf("before:%s\n", rssDateString);
 			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
-			printf("after:%s\n\n", rssDateString);
+			//printf("after:%s\n\n", rssDateString);
                }
        }
 }
@@ -341,36 +353,12 @@ int compare_pubDates(const void* a, const void* b) {
 	memset(&tmA, 0, sizeof(struct tm));
 	memset(&tmB, 0, sizeof(struct tm));
 
-       if(!(itemA -> pubDate)[0]) return 1;
-       if(!(itemB -> pubDate)[0]) return -1;
-//        if(itemA -> pubDate ==NULL) return 1;
-//        if(itemB -> pubDate ==NULL) return -1;
+	if(!(itemA -> pubDate)[0]) return 1;
+	if(!(itemB -> pubDate)[0]) return -1;
 
 	strptime(itemA -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
 	strptime(itemB -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmB);
 
-       //Account for time zone differences (disregard 30 minutes increments)
-/*       char *p = itemA -> pubDate;
-       p += strlen(p)-5;
-       if(*p == '-' || *p == '+'){
-               int diff = atoi(p)/100;
-               if(diff){
-                       tmA.tm_hour += diff;
-                       if(tmA.tm_hour < 0) tmA.tm_hour += 24;
-                       strftime(itemA -> pubDate, sizeof(itemA -> pubDate), "%a, %d %b %Y %H:%M:%S GMT", &tmA);
-               }
-       }
-       p = itemB -> pubDate;
-       p += strlen(p)-5;
-       if(*p == '-' || *p == '+'){
-               int diff = atoi(p)/100;
-               if(diff){
-                       tmB.tm_hour += diff;
-                       if(tmB.tm_hour < 0) tmB.tm_hour += 24;
-                       strftime(itemA -> pubDate, sizeof(itemA -> pubDate), "%a, %d %b %Y %H:%M:%S GMT", &tmB);
-               }
-       }
-*/
 	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmA.tm_sec, tmA.tm_min,tmA.tm_hour,tmA.tm_mday,tmA.tm_mon, tmA.tm_year,tmA.tm_wday, tmA.tm_yday);
 	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmB.tm_sec, tmB.tm_min,tmB.tm_hour,tmB.tm_mday,tmB.tm_mon, tmB.tm_year,tmB.tm_wday, tmB.tm_yday);
 	if(tmA.tm_year > tmB.tm_year) return -1;
