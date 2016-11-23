@@ -4,7 +4,7 @@
 struct item{
   char *title;
   char agency[10];
-  char *pubDate;
+  char pubDate[50];
 };
 
 void getLatestItems(int *size, struct item **allItemss);

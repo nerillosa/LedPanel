@@ -57,11 +57,13 @@ static void fillItems(struct item **items, struct news newsItems);
 static char *getContent(char *starttag, char *endtag, char *text);
 static int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
 static int compare_pubDates(const void* a, const void* b);
+static void cleanRssDateString(char *rssDateString);
 
-struct news newsItems;
+static struct news newsItems;
 static struct item *allItems = NULL;
-int currentSize = 0;
+static int currentSize = 0;
 
+//this function gets exported in parseRss.h
 void getLatestItems(int *size, struct item **allItemss){
         int i;
         for(i=0;i<NUM_SITES;i++){
@@ -80,14 +82,40 @@ void getLatestItems(int *size, struct item **allItemss){
                 }
         }
 
-	qsort(allItems, currentSize, sizeof(struct item), compare_pubDates); //sort with pubDate descending
+	for(i=0;i<currentSize;i++){
+		cleanRssDateString(allItems[i].pubDate); // attempt to normalize all dates to GMT/UTC time
+	}
+
+	qsort(allItems, currentSize, sizeof(struct item), compare_pubDates); //sort by pubDate descending
 
 	for(i=0;i<20;i++){
-		puts(allItems[i].title);
+		printf("%s::",allItems[i].title);
+		printf("%s::",allItems[i].pubDate);
+		printf("%s\n",allItems[i].agency);
 	}
 
 	*allItemss = allItems;
 	*size = currentSize;
+}
+
+void cleanRssDateString(char *rssDateString){
+	if(!rssDateString[0]) return;
+	struct tm tmA;
+	memset(&tmA, 0, sizeof(struct tm));
+	strptime(rssDateString,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
+
+	char *p = rssDateString;
+	p += strlen(p)-5;
+	if(*p == '-' || *p == '+'){
+		int diff = atoi(p)/100;
+		if(diff){
+			tmA.tm_hour -= diff;
+			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
+			printf("before:%s\n", rssDateString);
+			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
+			printf("after:%s\n\n", rssDateString);
+               }
+       }
 }
 
 int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
@@ -271,7 +299,13 @@ static void fillItems(struct item **itemss, struct news newsItems){
 	int i;
 	for(i=0;i<newsItems.size;i++){
 		char *text = ((char **)newsItems.items)[i];
-		items[i].pubDate = getContent("<pubDate>", "</pubDate>", text);
+                char *p = getContent("<pubDate>", "</pubDate>", text);
+                if(p==NULL) // some CNN titles are missing pubDate
+                        (items[i].pubDate)[0] = '\0';
+                else{
+                        strcpy(items[i].pubDate, p);
+                	free(p); //p was created with strdup
+		}
 		items[i].title = getContent("<title>", "</title>", text);
 		getTitle(items[i].title);
 		strcpy(items[i].agency, newsItems.agency);
@@ -307,11 +341,36 @@ int compare_pubDates(const void* a, const void* b) {
 	memset(&tmA, 0, sizeof(struct tm));
 	memset(&tmB, 0, sizeof(struct tm));
 
-	if(itemA -> pubDate == NULL) return 1;
-	if(itemB -> pubDate == NULL) return -1;
+       if(!(itemA -> pubDate)[0]) return 1;
+       if(!(itemB -> pubDate)[0]) return -1;
+//        if(itemA -> pubDate ==NULL) return 1;
+//        if(itemB -> pubDate ==NULL) return -1;
 
 	strptime(itemA -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
 	strptime(itemB -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmB);
+
+       //Account for time zone differences (disregard 30 minutes increments)
+/*       char *p = itemA -> pubDate;
+       p += strlen(p)-5;
+       if(*p == '-' || *p == '+'){
+               int diff = atoi(p)/100;
+               if(diff){
+                       tmA.tm_hour += diff;
+                       if(tmA.tm_hour < 0) tmA.tm_hour += 24;
+                       strftime(itemA -> pubDate, sizeof(itemA -> pubDate), "%a, %d %b %Y %H:%M:%S GMT", &tmA);
+               }
+       }
+       p = itemB -> pubDate;
+       p += strlen(p)-5;
+       if(*p == '-' || *p == '+'){
+               int diff = atoi(p)/100;
+               if(diff){
+                       tmB.tm_hour += diff;
+                       if(tmB.tm_hour < 0) tmB.tm_hour += 24;
+                       strftime(itemA -> pubDate, sizeof(itemA -> pubDate), "%a, %d %b %Y %H:%M:%S GMT", &tmB);
+               }
+       }
+*/
 	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmA.tm_sec, tmA.tm_min,tmA.tm_hour,tmA.tm_mday,tmA.tm_mon, tmA.tm_year,tmA.tm_wday, tmA.tm_yday);
 	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmB.tm_sec, tmB.tm_min,tmB.tm_hour,tmB.tm_mday,tmB.tm_mon, tmB.tm_year,tmB.tm_wday, tmB.tm_yday);
 	if(tmA.tm_year > tmB.tm_year) return -1;
