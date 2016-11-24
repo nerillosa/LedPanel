@@ -102,5 +102,3 @@ void paintCanvas(uint8_t *canvas){
 	      	}
 	}
 }
-
-
