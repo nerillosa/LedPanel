@@ -63,9 +63,8 @@ void getLatestItems(int *size, struct item **allItemss){
         int i;
 	int currentAllItemsUsed = 0;
 	static int currentAllItemsSize = 0;
-	static struct news newsItems;
+	static struct news *newsItems = NULL;
 	static struct item *allItems = NULL;
-
 	if(*allItemss){
 		for(i=0;i< *size;i++){
 			free((*allItemss)[i].title); // free all the previous titles which were created by strdup
@@ -73,10 +72,10 @@ void getLatestItems(int *size, struct item **allItemss){
 	}
 
         for(i=0;i<NUM_SITES;i++){
-                refreshFeed(politics[i], &newsItems);
+                refreshFeed(politics[i], newsItems);
                 if(newsItems.items == NULL) continue;
                 struct item *items;
-		fillItems(&items, &newsItems);
+		fillItems(&items, newsItems);
 
                 if(allItems == NULL){
                         allItems =  items;
@@ -129,12 +128,15 @@ void cleanRssDateString(char *rssDateString){
 int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
 {
         int k = 0;
-        if(newsItems -> items != NULL){ //free all the allocated memory
+	if(newsItems == NULL){
+		newsItems = malloc(sizeof(struct news));
+	}
+        else if(newsItems -> items != NULL){ //free all the allocated memory
                 char **itemss = (char **)(newsItems -> items);
                 for(k=0;k<newsItems -> size; k++){
 			free(itemss[k]);
                 }
-                free(newsItems -> items);
+                free(newsItems -> items); // created by strdup down below
 		newsItems -> items = NULL;
         }
 
@@ -312,7 +314,7 @@ static void fillItems(struct item **itemss, struct news *newsItems){
                         (items[i].pubDate)[0] = '\0';
                 else{
                         strcpy(items[i].pubDate, p);
-                	//free(p); //p was created with strdup
+                	free(p); //p was created with malloc
 		}
 		items[i].title = getContent("<title>", "</title>", text);
 		getTitle(items[i].title);
