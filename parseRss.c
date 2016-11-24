@@ -105,9 +105,9 @@ void getLatestItems(int *size, struct item **allItemss){
 		printf("%s::",allItems[i].pubDate);
 		printf("%s\n",allItems[i].agency);
 	}
-
+	printf("\n");
 	*allItemss = allItems;
-	*size = currentAllItemsSize;
+	*size = currentAllItemsUsed;
 }
 
 void cleanRssDateString(char *rssDateString){

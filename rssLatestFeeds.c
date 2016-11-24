@@ -23,7 +23,6 @@ struct timeval saved, now;
 
 char **titles; // pointer to an array of strings
 char *mesg;
-int numLines;
 int strlength;
 struct item *allItems = NULL;
 int allItemsSize;
@@ -33,14 +32,12 @@ int main(int argc, char **argv)
  	if (gpio_init())
 		return 1;
 
+	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
+	gettimeofday(&saved, NULL); //start time
 	getLatestItems(&allItemsSize, &allItems);
 	mesg = allItems[0].title;
 	strlength = strlen(mesg);
-	numLines = NUM_TITLES;
 
-
-	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
-	gettimeofday(&saved, NULL); //start time
 	while (true) //infinite loop
 	{
 		displayRowInit();
@@ -66,8 +63,9 @@ void paintCanvas(uint8_t *canvas){
 				mesgCounter = 0;
 				if(++clr == 8) clr = blue;
 				if(clr == red) clr++; //first row is always red
-				if(++lineCounter == numLines) { //refresh feed after all titles have scrolled
+				if(++lineCounter == NUM_TITLES) { //refresh feed after all titles have scrolled
 					lineCounter = 0;
+					getLatestItems(&allItemsSize, &allItems);
 				}
 				mesg = allItems[lineCounter].title;
 				strlength = strlen(mesg);
@@ -82,7 +80,7 @@ void paintCanvas(uint8_t *canvas){
 		char letra[10];
 		memset(letra, 0, 10);
 		letra[0] = ' ';
-		sprintf(&letra[(namelen<7 || numLines-lineCounter<10) ? 1 : 0], "%d", numLines - lineCounter);
+		sprintf(&letra[(namelen<7 || NUM_TITLES-lineCounter<10) ? 1 : 0], "%d", NUM_TITLES - lineCounter);
 		int k = 0;
 		for(k=0;k<strlen(letra);k++,i++){
 			drawLetter(*(letra+k), LETTER_WIDTH*i, 0, red, canvas);
@@ -92,15 +90,5 @@ void paintCanvas(uint8_t *canvas){
 	      	}
 	}
 }
-/*
-void getUrls(){
-	int lenn = sizeof(politics)/sizeof(politics[0]);
-	foxurls = (struct urls *)calloc(lenn, sizeof(struct urls));
-	int i;
-	for(i=0;i<lenn;i++){
-		strcpy(foxurls[i].agency.name, politics[i].name);
-		foxurls[i].agency.url = strdup(politics[i].url);
-		foxurls[i].next = &foxurls[(i+1)%lenn]; // circular linked list
-	}
-}
-*/
+
+
