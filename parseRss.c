@@ -51,7 +51,7 @@ static void getTitle(char *line);
 static int fsize(const char *filename);
 static void cleanItem(char *line);
 static void cleanHtml(char * const line);  //line start is const
-static void fillItems(struct item **items, struct news newsItems);
+static void fillItems(struct item **items, struct news *newsItems);
 static char *getContent(char *starttag, char *endtag, char *text);
 static int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
 static int compare_pubDates(const void* a, const void* b);
@@ -76,7 +76,7 @@ void getLatestItems(int *size, struct item **allItemss){
                 refreshFeed(politics[i], &newsItems);
                 if(newsItems.items == NULL) continue;
                 struct item *items;
-                fillItems(&items, newsItems);
+		fillItems(&items, &newsItems);
 
                 if(allItems == NULL){
                         allItems =  items;
@@ -302,21 +302,21 @@ void cleanHtml(char * const line) { // replaces some html codes
 	}
 }
 
-static void fillItems(struct item **itemss, struct news newsItems){
-	struct item *items = malloc(newsItems.size * sizeof(struct item));
+static void fillItems(struct item **itemss, struct news *newsItems){
+	struct item *items = malloc(newsItems->size * sizeof(struct item));
 	int i;
-	for(i=0;i<newsItems.size;i++){
-		char *text = ((char **)newsItems.items)[i];
+	for(i=0;i<newsItems->size;i++){
+		char *text = ((char **)newsItems->items)[i];
                 char *p = getContent("<pubDate>", "</pubDate>", text);
                 if(p==NULL) // some CNN titles are missing pubDate
                         (items[i].pubDate)[0] = '\0';
                 else{
                         strcpy(items[i].pubDate, p);
-                	free(p); //p was created with strdup
+                	//free(p); //p was created with strdup
 		}
 		items[i].title = getContent("<title>", "</title>", text);
 		getTitle(items[i].title);
-		strcpy(items[i].agency, newsItems.agency);
+		strcpy(items[i].agency, newsItems->agency);
 	}
 	*itemss = items;
 }

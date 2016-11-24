@@ -82,6 +82,7 @@ void paintCanvas(uint8_t *canvas){
 				strncpy(hora, allItems[lineCounter].pubDate +17, 5);
 				strcat(hora, " GMT");
 				agencyCounter = 0;
+				flip *= -1;
 			}
 		}
 		int i;
