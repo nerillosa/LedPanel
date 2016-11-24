@@ -23,6 +23,8 @@ struct timeval saved, now;
 
 char **titles; // pointer to an array of strings
 char *mesg;
+char agencia[10];
+char hora[10];
 int strlength;
 struct item *allItems = NULL;
 int allItemsSize;
@@ -36,6 +38,10 @@ int main(int argc, char **argv)
 	gettimeofday(&saved, NULL); //start time
 	getLatestItems(&allItemsSize, &allItems);
 	mesg = allItems[0].title;
+
+	strcpy(agencia,allItems[0].agency);
+	strncpy(hora, allItems[0].pubDate +17, 5);
+	strcat(hora, " GMT");
 	strlength = strlen(mesg);
 
 	while (true) //infinite loop
@@ -49,7 +55,9 @@ int main(int argc, char **argv)
 void paintCanvas(uint8_t *canvas){
 	static int mesgCounter = 0;
 	static int lineCounter = 0;
+	static int flip = -1;
 	static int moveOffset = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
+	static int agencyCounter = 0;
 	static color clr = blue;
 
 	gettimeofday(&now, NULL);
@@ -69,22 +77,25 @@ void paintCanvas(uint8_t *canvas){
 				}
 				mesg = allItems[lineCounter].title;
 				strlength = strlen(mesg);
+
+				strcpy(agencia,allItems[lineCounter].agency);
+				strncpy(hora, allItems[lineCounter].pubDate +17, 5);
+				strcat(hora, " GMT");
+				agencyCounter = 0;
 			}
 		}
-		int i=0;
-		char *namee = allItems[lineCounter].agency;
-		int namelen = strlen(namee);
-        	for(i=0;i<namelen;i++){
-              		drawLetter(*(namee+i), LETTER_WIDTH*i, 0, red, canvas);
-		}
-		char letra[10];
-		memset(letra, 0, 10);
-		letra[0] = ' ';
-		sprintf(&letra[(namelen<7 || NUM_TITLES-lineCounter<10) ? 1 : 0], "%d", NUM_TITLES - lineCounter);
-		int k = 0;
-		for(k=0;k<strlen(letra);k++,i++){
-			drawLetter(*(letra+k), LETTER_WIDTH*i, 0, red, canvas);
-		}
+		int i;
+
+		if(++agencyCounter%40 == 0) flip *= -1;
+		if(flip > 0)
+			for(i=0;i<strlen(agencia);i++){
+				drawLetter(*(agencia+i), LETTER_WIDTH*i, 0, red, canvas);
+			}
+		else
+			for(i=0;i<strlen(hora);i++){
+				drawLetter(*(hora+i), LETTER_WIDTH*i, 0, red, canvas);
+			}
+
         	for(i=0;i<strlength;i++){
               		drawLetter(*(mesg+i), moveOffset + LETTER_WIDTH*i, 9, clr, canvas);
 	      	}

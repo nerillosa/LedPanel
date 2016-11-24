@@ -19,11 +19,6 @@
 #define BUFFER_SIZE 8192
 #define  BUFFER_DELTA 100
 
-struct newsAgency{
- char name[10];
- char *url;
-};
-
 struct news {
   char agency[10];
   void *items;
@@ -35,15 +30,18 @@ struct hcodes{
         char value;
 } codes[] = {{"&#x2014;",'-'},{"&#8211;",'-'},{"&#8212;",'-'},{"&#x2018;",'\''},{"&#x2019;",'\''},{"&#8216;",'\''},{"&#8217;",'\''},{"&#8220;",'"'},{"&#8221;",'"'},{"&#8230;",'~'},{"&#160;",' '}};
 
-struct newsAgency politics[] = {
-                               {"FOX","http://feeds.foxnews.com/foxnews/politics?format=xml"},
-                               {"NYTIMES","http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"},
-                               {"W.POST","http://feeds.washingtonpost.com/rss/rss_powerpost"},
-                               {"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
-                               {"ABC","http://feeds.abcnews.com/abcnews/politicsheadlines"},
-                               {"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
-                               {"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
-                                };
+struct newsAgency {
+	char name[10];
+	char *url;
+} politics[] =  {
+		{"FOX NEWS","http://feeds.foxnews.com/foxnews/politics?format=xml"},
+		{"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"},
+		{"WSH POST","http://feeds.washingtonpost.com/rss/rss_powerpost"},
+		{"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
+		{"ABC NEWS","http://feeds.abcnews.com/abcnews/politicsheadlines"},
+		{"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
+		{"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
+		};
 
 int NUM_SITES = sizeof(politics)/sizeof(politics[0]);
 
@@ -123,9 +121,7 @@ void cleanRssDateString(char *rssDateString){
 		if(diff){
 			tmA.tm_hour -= diff;
 			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
-			//printf("before:%s\n", rssDateString);
 			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
-			//printf("after:%s\n\n", rssDateString);
                }
        }
 }
@@ -347,9 +343,8 @@ char *getContent(char *starttag, char *endtag, char *text){
 int compare_pubDates(const void* a, const void* b) {
         struct item *itemA = (struct item *)a;
         struct item *itemB = (struct item *)b;
+	struct tm tmA,tmB;
 
-	struct tm tmA;
-	struct tm tmB;
 	memset(&tmA, 0, sizeof(struct tm));
 	memset(&tmB, 0, sizeof(struct tm));
 
@@ -359,8 +354,6 @@ int compare_pubDates(const void* a, const void* b) {
 	strptime(itemA -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
 	strptime(itemB -> pubDate,"%a, %d %b %Y %H:%M:%S %Z", &tmB);
 
-	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmA.tm_sec, tmA.tm_min,tmA.tm_hour,tmA.tm_mday,tmA.tm_mon, tmA.tm_year,tmA.tm_wday, tmA.tm_yday);
-	//printf("sec:%d;;min:%d;;hour:%d;;day:%d;;mon:%d;;year:%d;;wday:%d\n", tmB.tm_sec, tmB.tm_min,tmB.tm_hour,tmB.tm_mday,tmB.tm_mon, tmB.tm_year,tmB.tm_wday, tmB.tm_yday);
 	if(tmA.tm_year > tmB.tm_year) return -1;
 	else if (tmA.tm_year < tmB.tm_year) return 1;
 	else if (tmA.tm_mon > tmB.tm_mon) return -1;
