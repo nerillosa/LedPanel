@@ -15,7 +15,6 @@
 #include "parseRss.h"
 
 #define MOVE_INTERVAL  30  // time in milliseconds between each move
-#define NUM_TITLES 20
 
 void paintCanvas(uint8_t *canvas);
 
@@ -27,7 +26,7 @@ char agencia[10];
 char hora[10];
 int strlength;
 struct item *allItems = NULL;
-int allItemsSize;
+//int allItemsSize;
 
 int main(int argc, char **argv)
 {
@@ -36,7 +35,7 @@ int main(int argc, char **argv)
 
 	uint8_t *canvas = (uint8_t *)calloc(PANEL_SIZE, sizeof(uint8_t));
 	gettimeofday(&saved, NULL); //start time
-	getLatestItems(&allItemsSize, &allItems);
+	getLatestItems(&allItems);
 	mesg = allItems[0].title;
 
 	strcpy(agencia,allItems[0].agency);
@@ -73,7 +72,7 @@ void paintCanvas(uint8_t *canvas){
 				if(clr == red) clr++; //first row is always red
 				if(++lineCounter == NUM_TITLES) { //refresh feed after all titles have scrolled
 					lineCounter = 0;
-					getLatestItems(&allItemsSize, &allItems);
+					getLatestItems(&allItems);
 				}
 				mesg = allItems[lineCounter].title;
 				strlength = strlen(mesg);

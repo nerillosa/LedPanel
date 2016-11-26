@@ -1,5 +1,5 @@
 /*
- * C function that gets rss feeds from various news agencies and extracts the titles
+ * C function that gets the latest rss feeds from various news agencies and extracts the titles
  * Uses libcurl open source library to download feed.xml
  * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
 */
@@ -17,13 +17,13 @@
 #define IN  1
 #define MAX_TITLES 100
 #define BUFFER_SIZE 8192
-#define  BUFFER_DELTA 100
+#define ITEM_SIZE 200
 
 struct news {
   char agency[10];
-  void *items;
+  char items[ITEM_SIZE][512];
   int size;
-};
+} newsItems;
 
 struct hcodes{
         char *hcode;
@@ -41,103 +41,67 @@ struct newsAgency {
 		{"ABC NEWS","http://feeds.abcnews.com/abcnews/politicsheadlines"},
 		{"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
 		{"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
+
 		};
 
 int NUM_SITES = sizeof(politics)/sizeof(politics[0]);
-
 static void download_feed(FILE *dst, const char *src);
-static int countWords(char *str);
+static int countTitleWords(char *str);
 static void getTitle(char *line);
 static int fsize(const char *filename);
-static void cleanItem(char *line);
+static void cleanItem(char *buffer);
 static void cleanHtml(char * const line);  //line start is const
-static void fillItems(struct item **items, struct news *newsItems);
-static char *getContent(char *starttag, char *endtag, char *text);
-static int refreshFeed(struct newsAgency newsAgency, struct news *newsItems);
+static void fillItems(struct item *items);
+static void getContent(int dest_size, char *dest, char *starttag, char *endtag, char *text);
+static int refreshFeed(struct newsAgency newsAgency);
 static int compare_pubDates(const void* a, const void* b);
 static void cleanRssDateString(char *rssDateString);
 
+static struct item itemArray[ITEM_SIZE];
 
 //this function gets exported in parseRss.h
-void getLatestItems(int *size, struct item **allItemss){
-        int i;
-	int currentAllItemsUsed = 0;
-	static int currentAllItemsSize = 0;
-	static struct news newsItems;
-	static struct item *allItems = NULL;
-
-	if(*allItemss){
-		for(i=0;i< *size;i++){
-			free((*allItemss)[i].title); // free all the previous titles which were created by strdup
-		}
-	}
+void getLatestItems(struct item **allItemss){
+        int i,j;
+	int currentItemsCount = 0;
 
         for(i=0;i<NUM_SITES;i++){
-                refreshFeed(politics[i], &newsItems);
-                if(newsItems.items == NULL) continue;
-                struct item *items;
-		fillItems(&items, &newsItems);
-
-                if(allItems == NULL){
-                        allItems =  items;
-			currentAllItemsUsed = currentAllItemsSize = newsItems.size;
-                }else{
-			if(newsItems.size > (currentAllItemsSize - currentAllItemsUsed)){
-	                        allItems =  realloc(allItems, (currentAllItemsSize + BUFFER_DELTA) * sizeof(struct item));
-                	        currentAllItemsSize += BUFFER_DELTA;
-			}
-       	                memcpy (allItems + currentAllItemsUsed, items, newsItems.size * sizeof(struct item));
-			currentAllItemsUsed += newsItems.size;
-                        free(items); // After previous memcpy it can be freed
-                }
+                refreshFeed(politics[i]);
+		fillItems(&itemArray[0] + currentItemsCount);
+		currentItemsCount += newsItems.size;
         }
 
-	for(i=0;i<currentAllItemsSize;i++){
-		cleanRssDateString(allItems[i].pubDate); // attempt to normalize all dates to GMT/UTC time
+	printf("currentItemsCount:%d\n",currentItemsCount);
+
+	for(i=0;i<currentItemsCount;i++){
+		cleanRssDateString(itemArray[i].pubDate); // attempt to normalize all dates to GMT/UTC time
 	}
 
-	qsort(allItems, currentAllItemsSize, sizeof(struct item), compare_pubDates); //sort by pubDate descending
+	qsort(itemArray, currentItemsCount, sizeof(struct item), compare_pubDates); //sort by pubDate descending
 
-	for(i=0;i<20;i++){
-		printf("%s::",allItems[i].title);
-		printf("%s::",allItems[i].pubDate);
-		printf("%s\n",allItems[i].agency);
+	for(i=0;i<NUM_TITLES;i++){
+		printf("%s::",itemArray[i].title);
+		printf("%s::",itemArray[i].pubDate);
+		printf("%s\n",itemArray[i].agency);
 	}
 	printf("\n");
-	*allItemss = allItems;
-	*size = currentAllItemsUsed;
+
+	*allItemss = itemArray;
 }
 
-void cleanRssDateString(char *rssDateString){
-	if(!rssDateString[0]) return;
-	struct tm tmA;
-	memset(&tmA, 0, sizeof(struct tm));
-	strptime(rssDateString,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
-
-	char *p = rssDateString;
-	p += strlen(p)-5;
-	if(*p == '-' || *p == '+'){
-		int diff = atoi(p)/100;
-		if(diff){
-			tmA.tm_hour -= diff;
-			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
-			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
-               }
-       }
+static void fillItems(struct item *items){
+	int i;
+	for(i=0;i<newsItems.size;i++){
+		char *text = newsItems.items[i];
+                getContent(50, items[i].pubDate, "<pubDate>", "</pubDate>", text);
+		getContent(512, items[i].title, "<title>", "</title>", text);
+		getTitle(items[i].title);
+		strcpy(items[i].agency, newsItems.agency);
+	}
 }
 
-int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
+int refreshFeed(struct newsAgency newsAgency)
 {
         int k = 0;
-        if(newsItems -> items != NULL){ //free all the allocated memory
-                char **itemss = (char **)(newsItems -> items);
-                for(k=0;k<newsItems -> size; k++){
-			free(itemss[k]);
-                }
-                free(newsItems -> items);
-		newsItems -> items = NULL;
-        }
-
     	FILE *fptr;
 
 	/*  open for writing */
@@ -163,7 +127,7 @@ int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
 		return 1;
 	}
 
-        char **news = malloc(MAX_TITLES * sizeof(char*)); // MAX_TITLES titles of BUFFER_SIZE chars each
+        //char **news = newsItems.items;
         int nlines = 0;
 
         int state=OUT,i=0,j=0,pos=0;
@@ -172,7 +136,7 @@ int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
         char identifier[12];
         memset(identifier, 0, 12);
 
-        do { //this do loop will capture all the texts in between title tags
+        do { //this do loop will capture all the texts in between item tags
                 a = fgetc(fptr);
                 for(k=1;k<11;k++){ //shift left
                         identifier[k-1] = identifier[k];
@@ -192,18 +156,20 @@ int refreshFeed(struct newsAgency newsAgency, struct news *newsItems)
                                 state=OUT;
 				buffer[pos] = '\0';
 				cleanItem(buffer);
-				if(countWords(buffer)>4 && nlines<MAX_TITLES){ // skip trivial titles
-					cleanHtml(buffer);
-			                news[nlines++] = strdup(buffer);
+				cleanHtml(buffer);
+
+				if(nlines<MAX_TITLES && countTitleWords(buffer)){ //
+			                strncpy(newsItems.items[nlines], buffer, 512);
+			                newsItems.items[nlines++][511] = '\0';
+					//printf("%s\n\n", buffer);
 				}
                         }
                 }
 
         } while (a != EOF && ++j<fileSize);// some files don't have EOF
 
-        newsItems -> items = news;
-        newsItems -> size = nlines;
-	strcpy (newsItems -> agency, newsAgency.name);
+        newsItems.size = nlines;
+	strcpy (newsItems.agency, newsAgency.name);
 	fclose(fptr);
 	return 0;
 }
@@ -213,6 +179,7 @@ void download_feed(FILE *dst, const char *src){
 	curl_easy_setopt(handle, CURLOPT_URL, src);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, dst);
 	curl_easy_perform(handle);
+	curl_easy_cleanup(handle); //without this program will leak memory and eventually crash...learned it the hard way
 }
 
 int fsize(const char *filename) {
@@ -224,9 +191,22 @@ int fsize(const char *filename) {
     return -1;
 }
 
-void cleanItem(char *line){
-	static char *suffix = "</item>";
-	line[strlen(line)-strlen(suffix)] = '\0'; //remove suffix
+void cleanItem(char *buffer){
+	char *p = strstr(buffer, "<title>");
+	if(!p) return;
+	strcpy(buffer, p); //remove all the junk before <title>
+	char *p1 = strstr(buffer, "<pubDate>");
+	p = strstr(buffer, "</title>");
+	if(!p) return;
+
+	if(p1){
+		strcpy(p + strlen("</title>"), p1);
+		p1 = strstr(buffer, "</pubDate>");
+		if(p1)
+			*(p1 + strlen("</pubDate>")) = '\0';
+	}else{
+		*(p + strlen("</title>")) = '\0';
+	}
 }
 
 void getTitle(char *line){
@@ -263,14 +243,15 @@ void getTitle(char *line){
 	strcpy(line, p1);
 }
 
-// returns number of words in str
-int countWords(char *str)
+// returns true if number of words in title > 4
+int countTitleWords(char *str)
 {
     int state = OUT;
     int wc = 0;  // word count
-
+    char *p = strstr(str, "</title>");
+    if(!p) return 0;
     // Scan all characters one by one
-    while (*str)
+    while (str != p)
     {
         // If next character is a separator, set the
         // state as OUT
@@ -285,7 +266,7 @@ int countWords(char *str)
 
         ++str;
     }
-    return wc;
+    return wc > 4 ? 1 : 0;
 }
 
 void cleanHtml(char * const line) { // replaces some html codes
@@ -302,40 +283,25 @@ void cleanHtml(char * const line) { // replaces some html codes
 	}
 }
 
-static void fillItems(struct item **itemss, struct news *newsItems){
-	struct item *items = malloc(newsItems->size * sizeof(struct item));
-	int i;
-	for(i=0;i<newsItems->size;i++){
-		char *text = ((char **)newsItems->items)[i];
-                char *p = getContent("<pubDate>", "</pubDate>", text);
-                if(p==NULL) // some CNN titles are missing pubDate
-                        (items[i].pubDate)[0] = '\0';
-                else{
-                        strcpy(items[i].pubDate, p);
-                	//free(p); //p was created with strdup
-		}
-		items[i].title = getContent("<title>", "</title>", text);
-		getTitle(items[i].title);
-		strcpy(items[i].agency, newsItems->agency);
+void getContent(int dest_size, char *dest, char *starttag, char *endtag, char *text){
+
+	if(!text){
+		dest[0] = '\0';
+		return;
 	}
-	*itemss = items;
-}
-
-char *getContent(char *starttag, char *endtag, char *text){
-
-	if(!text) return NULL;
 
 	char *p1 = strstr(text, starttag);
 	char *p2 = strstr(text, endtag);
 
-	if(!p1 || !p2 || p1>p2) return NULL;
+	if(!p1 || !p2 || p1>p2){
+		dest[0] = '\0';
+		return;
+	}
 
-	int size = p2 - p1 - strlen(starttag);
-	char *out = malloc((size+1) * sizeof(char));
+	size_t size = p2 - p1 - strlen(starttag);
 
-	strncpy(out, p1+strlen(starttag), size);
-	out[size] = '\0';
-	return out;
+	strncpy(dest, p1+strlen(starttag), dest_size);
+	dest[size] = '\0';
 
 }
 
@@ -368,3 +334,22 @@ int compare_pubDates(const void* a, const void* b) {
 	else if (tmA.tm_sec < tmB.tm_sec) return 1;
 	else return 0;
 }
+
+void cleanRssDateString(char *rssDateString){
+	if(!rssDateString[0]) return;
+	struct tm tmA;
+	memset(&tmA, 0, sizeof(struct tm));
+	strptime(rssDateString,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
+
+	char *p = rssDateString;
+	p += strlen(p)-5;
+	if(*p == '-' || *p == '+'){
+		int diff = atoi(p)/100;
+		if(diff){
+			tmA.tm_hour -= diff;
+			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
+			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
+               }
+       }
+}
+
