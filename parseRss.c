@@ -21,9 +21,10 @@
 
 struct news {
   char agency[10];
-  char items[ITEM_SIZE][512];
+  void *items;
   int size;
-} newsItems;
+} *newsItems = NULL;
+
 
 struct hcodes{
         char *hcode;
@@ -52,7 +53,7 @@ static int fsize(const char *filename);
 static void cleanItem(char *buffer);
 static void cleanHtml(char * const line);  //line start is const
 static void fillItems(struct item *items);
-static void getContent(int dest_size, char *dest, char *starttag, char *endtag, char *text);
+static char *getContent(char *starttag, char *endtag, char *text);
 static int refreshFeed(struct newsAgency newsAgency);
 static int compare_pubDates(const void* a, const void* b);
 static void cleanRssDateString(char *rssDateString);
@@ -67,7 +68,7 @@ void getLatestItems(struct item **allItemss){
         for(i=0;i<NUM_SITES;i++){
                 refreshFeed(politics[i]);
 		fillItems(&itemArray[0] + currentItemsCount);
-		currentItemsCount += newsItems.size;
+		currentItemsCount += newsItems ->size;
         }
 
 	printf("currentItemsCount:%d\n",currentItemsCount);
@@ -90,18 +91,45 @@ void getLatestItems(struct item **allItemss){
 
 static void fillItems(struct item *items){
 	int i;
-	for(i=0;i<newsItems.size;i++){
-		char *text = newsItems.items[i];
-                getContent(50, items[i].pubDate, "<pubDate>", "</pubDate>", text);
-		getContent(512, items[i].title, "<title>", "</title>", text);
-		getTitle(items[i].title);
-		strcpy(items[i].agency, newsItems.agency);
+	for(i=0;i<newsItems ->size;i++){
+		char *text = ((char **)newsItems->items)[i];//newsItems.items[i];
+
+                char *p = getContent("<pubDate>", "</pubDate>", text);
+                if(p==NULL) // some CNN titles are missing pubDate
+                        (items[i].pubDate)[0] = '\0';
+                else{
+                        strcpy(items[i].pubDate, p);
+                        free(p); //p was created with malloc
+                }
+
+                p = getContent("<title>", "</title>", text);
+                if(p==NULL)
+                        (items[i].title)[0] = '\0';
+                else{
+                        getTitle(p);
+                        strncpy(items[i].title, p, 512);
+                        (items[i].title)[511] = '\0'; // just in case it writes the max
+                        free(p);
+                }
+
+		strcpy(items[i].agency, newsItems ->agency);
 	}
 }
 
 int refreshFeed(struct newsAgency newsAgency)
 {
         int k = 0;
+        if(newsItems == NULL){
+                newsItems = malloc(sizeof(struct news));
+                newsItems -> items = malloc(MAX_TITLES * sizeof(char*));
+        }
+        else if(newsItems -> items != NULL){ //free all the allocated memory
+                char **items = (char **)(newsItems -> items);
+                for(k=0;k<newsItems -> size; k++){
+                        free(items[k]);
+                }
+        }
+
     	FILE *fptr;
 
 	/*  open for writing */
@@ -127,7 +155,7 @@ int refreshFeed(struct newsAgency newsAgency)
 		return 1;
 	}
 
-        //char **news = newsItems.items;
+        char **news = (char **)newsItems -> items;
         int nlines = 0;
 
         int state=OUT,i=0,j=0,pos=0;
@@ -159,17 +187,15 @@ int refreshFeed(struct newsAgency newsAgency)
 				cleanHtml(buffer);
 
 				if(nlines<MAX_TITLES && countTitleWords(buffer)){ //
-			                strncpy(newsItems.items[nlines], buffer, 512);
-			                newsItems.items[nlines++][511] = '\0';
-					//printf("%s\n\n", buffer);
+					news[nlines++] = strdup(buffer);
 				}
                         }
                 }
 
         } while (a != EOF && ++j<fileSize);// some files don't have EOF
 
-        newsItems.size = nlines;
-	strcpy (newsItems.agency, newsAgency.name);
+        newsItems ->size = nlines;
+	strcpy (newsItems ->agency, newsAgency.name);
 	fclose(fptr);
 	return 0;
 }
@@ -179,7 +205,7 @@ void download_feed(FILE *dst, const char *src){
 	curl_easy_setopt(handle, CURLOPT_URL, src);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, dst);
 	curl_easy_perform(handle);
-	curl_easy_cleanup(handle); //without this program will leak memory and eventually crash...learned it the hard way
+	curl_easy_cleanup(handle); //without this the program will leak memory and eventually crash...learned it the hard way
 }
 
 int fsize(const char *filename) {
@@ -283,26 +309,20 @@ void cleanHtml(char * const line) { // replaces some html codes
 	}
 }
 
-void getContent(int dest_size, char *dest, char *starttag, char *endtag, char *text){
+char *getContent(char *starttag, char *endtag, char *text){
+        if(!text) return NULL;
 
-	if(!text){
-		dest[0] = '\0';
-		return;
-	}
+        char *p1 = strstr(text, starttag);
+        char *p2 = strstr(text, endtag);
 
-	char *p1 = strstr(text, starttag);
-	char *p2 = strstr(text, endtag);
+        if(!p1 || !p2 || p1>p2) return NULL;
 
-	if(!p1 || !p2 || p1>p2){
-		dest[0] = '\0';
-		return;
-	}
+        size_t size = p2 - p1 - strlen(starttag);
+        char *out = malloc((size+1) * sizeof(char));
 
-	size_t size = p2 - p1 - strlen(starttag);
-
-	strncpy(dest, p1+strlen(starttag), dest_size);
-	dest[size] = '\0';
-
+        strncpy(out, p1+strlen(starttag), size);
+        out[size] = '\0';
+        return out;
 }
 
 // utility compare function to be used in qsort
