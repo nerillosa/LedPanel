@@ -4,7 +4,7 @@
 #define NUM_TITLES 20
 
 struct item{
-  char title[512];
+  char *title;
   char agency[10];
   char pubDate[50];
 };

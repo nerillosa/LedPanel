@@ -1,7 +1,7 @@
 /*
  * C function that gets the latest rss feeds from various news agencies and extracts the titles
  * Uses libcurl open source library to download feed.xml
- * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
+ * The function accounts that the files downloaded are not necessarily well formed xml.
 */
 
 #include <stdio.h>
@@ -17,7 +17,7 @@
 #define IN  1
 #define MAX_TITLES 100
 #define BUFFER_SIZE 8192
-#define ITEM_SIZE 200
+#define ITEM_SIZE 64
 
 struct news {
   char agency[10];
@@ -58,35 +58,48 @@ static int refreshFeed(struct newsAgency newsAgency);
 static int compare_pubDates(const void* a, const void* b);
 static void cleanRssDateString(char *rssDateString);
 
-static struct item itemArray[ITEM_SIZE];
 
 //this function gets exported in parseRss.h
-void getLatestItems(struct item **allItemss){
-        int i,j;
-	int currentItemsCount = 0;
+void getLatestItems(struct item **allItems){
+        int i;
+	static int currentItemsCount = 0;
+	static int current_item_size = 0;
+
+	if(*allItems == NULL){
+ 		*allItems = malloc(ITEM_SIZE * sizeof(struct item));
+		current_item_size = ITEM_SIZE;
+	}else{
+	        for(i=0;i<currentItemsCount;i++){
+			free((*allItems)[i].title);
+		}
+		currentItemsCount = 0;
+	}
 
         for(i=0;i<NUM_SITES;i++){
                 refreshFeed(politics[i]);
-		fillItems(&itemArray[0] + currentItemsCount);
+		if(currentItemsCount > current_item_size - newsItems ->size){
+			current_item_size += ITEM_SIZE;
+			*allItems =  realloc(*allItems, current_item_size * sizeof(struct item));
+		}
+		fillItems(*allItems + currentItemsCount);
 		currentItemsCount += newsItems ->size;
         }
 
 	printf("currentItemsCount:%d\n",currentItemsCount);
 
 	for(i=0;i<currentItemsCount;i++){
-		cleanRssDateString(itemArray[i].pubDate); // attempt to normalize all dates to GMT/UTC time
+		cleanRssDateString((*allItems)[i].pubDate); // attempt to normalize all dates to GMT/UTC time
 	}
 
-	qsort(itemArray, currentItemsCount, sizeof(struct item), compare_pubDates); //sort by pubDate descending
+	qsort(*allItems, currentItemsCount, sizeof(struct item), compare_pubDates); //sort by pubDate descending
 
 	for(i=0;i<NUM_TITLES;i++){
-		printf("%s::",itemArray[i].title);
-		printf("%s::",itemArray[i].pubDate);
-		printf("%s\n",itemArray[i].agency);
+		printf("%s::",(*allItems)[i].title);
+		printf("%s::",(*allItems)[i].pubDate);
+		printf("%s\n",(*allItems)[i].agency);
 	}
 	printf("\n");
 
-	*allItemss = itemArray;
 }
 
 static void fillItems(struct item *items){
@@ -106,10 +119,8 @@ static void fillItems(struct item *items){
                 if(p==NULL)
                         (items[i].title)[0] = '\0';
                 else{
-                        getTitle(p);
-                        strncpy(items[i].title, p, 512);
-                        (items[i].title)[511] = '\0'; // just in case it writes the max
-                        free(p);
+			getTitle(p);
+                        items[i].title = p;
                 }
 
 		strcpy(items[i].agency, newsItems ->agency);
