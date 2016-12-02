@@ -26,7 +26,6 @@ char agencia[10];
 char hora[10];
 int strlength;
 struct item *allItems = NULL;
-//int allItemsSize;
 
 int main(int argc, char **argv)
 {
@@ -38,9 +37,10 @@ int main(int argc, char **argv)
 	getLatestItems(&allItems);
 	mesg = allItems[0].title;
 
-	strcpy(agencia,allItems[0].agency);
+	strcpy(agencia, allItems[0].agency);
+	memset(hora, 0, 10);
 	strncpy(hora, allItems[0].pubDate +17, 5);
-	strcat(hora, " GMT");
+	strcat(hora, "  20");
 	strlength = strlen(mesg);
 
 	while (true) //infinite loop
@@ -58,6 +58,7 @@ void paintCanvas(uint8_t *canvas){
 	static int moveOffset = NUMBER_PANELS * NUMBER_COLUMNS_PER_PANEL;
 	static int agencyCounter = 0;
 	static color clr = blue;
+	char cter[20];
 
 	gettimeofday(&now, NULL);
 
@@ -78,8 +79,10 @@ void paintCanvas(uint8_t *canvas){
 				strlength = strlen(mesg);
 
 				strcpy(agencia,allItems[lineCounter].agency);
+				memset(hora, 0, 10);
 				strncpy(hora, allItems[lineCounter].pubDate +17, 5);
-				strcat(hora, " GMT");
+				sprintf(cter, "  %02d", 20-lineCounter);
+				strcat(hora, cter);
 				agencyCounter = 0;
 				flip *= -1;
 			}
@@ -101,3 +104,5 @@ void paintCanvas(uint8_t *canvas){
 	      	}
 	}
 }
+
+

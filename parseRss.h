@@ -4,9 +4,10 @@
 #define NUM_TITLES 20
 
 struct item{
-  char *title;
+  char title[512];
   char agency[10];
   char pubDate[50];
+  char url[256];
 };
 
 void getLatestItems(struct item **allItemss);
