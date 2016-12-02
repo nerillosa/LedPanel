@@ -27,6 +27,8 @@ char hora[10];
 int strlength;
 struct item *allItems = NULL;
 
+void convertToMST(char *time);
+
 int main(int argc, char **argv)
 {
  	if (gpio_init())
@@ -40,6 +42,7 @@ int main(int argc, char **argv)
 	strcpy(agencia, allItems[0].agency);
 	memset(hora, 0, 10);
 	strncpy(hora, allItems[0].pubDate +17, 5);
+	convertToMST(hora);
 	strcat(hora, "  20");
 	strlength = strlen(mesg);
 
@@ -81,6 +84,7 @@ void paintCanvas(uint8_t *canvas){
 				strcpy(agencia,allItems[lineCounter].agency);
 				memset(hora, 0, 10);
 				strncpy(hora, allItems[lineCounter].pubDate +17, 5);
+				convertToMST(hora);
 				sprintf(cter, "  %02d", 20-lineCounter);
 				strcat(hora, cter);
 				agencyCounter = 0;
@@ -105,4 +109,11 @@ void paintCanvas(uint8_t *canvas){
 	}
 }
 
+void convertToMST(char *time){
+	int hours, seconds;
+	sscanf(time, "%d:%d", &hours, &seconds);
+	hours -= 7; // UTC - 7
+	if(hours < 0) hours += 24;
+	sprintf(time, "%02d:%02d", hours, seconds);
+}
 
