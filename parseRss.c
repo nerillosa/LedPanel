@@ -62,6 +62,7 @@ static void sendPostNews(char *jsonStringValue);
 static void cleanJson(char *json);
 static void cleanUrl(char *url);
 static void cleanTitle(int size, char *buff);
+static int calcDays(int month, int year);
 
 static struct item itemArray[ITEM_SIZE];
 
@@ -419,11 +420,38 @@ void cleanRssDateString(char *rssDateString){
 		int diff = atoi(p)/100;
 		if(diff){
 			tmA.tm_hour -= diff;
-			if(tmA.tm_hour < 0) tmA.tm_hour += 24;
+			if(tmA.tm_hour < 0) {
+				tmA.tm_hour += 24;
+				if(tmA.tm_mday > 1){
+					tmA.tm_mday -= 1;
+				}else{
+					tmA.tm_mon -= 1;
+					if(tmA.tm_mon < 0){ // its January 1st!
+						tmA.tm_mon = 11;
+						tmA.tm_year -= 1;
+					}else
+						tmA.tm_mday = calcDays(tmA.tm_mon, 1900 + tmA.tm_year);
+				}
+			}
 			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
                }
        }
 }
+
+int calcDays(int month, int year)// calculates number of days in a given month
+{
+	int Days;
+	if (month == 3 || month == 5 || month == 8 || month == 10) Days = 30;
+	else if (month == 1) {
+		int isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    		if (isLeapYear) Days = 29;
+    		else Days = 28;
+	}
+	else Days = 31;
+	return Days;
+}
+
+
 
 void getJsonFromItems(int size, struct item *items, char *json){
         strcpy(json, "value=[");
