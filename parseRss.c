@@ -42,7 +42,7 @@ struct newsAgency {
 		{"ABC NEWS","http://feeds.abcnews.com/abcnews/politicsheadlines"},
 		{"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
 		{"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
-
+		{"US TODAY","http://rssfeeds.usatoday.com/usatodaycomwashington-topstories&x=1"},
 		};
 
 int NUM_SITES = sizeof(politics)/sizeof(politics[0]);
@@ -63,6 +63,7 @@ static void cleanJson(char *json);
 static void cleanUrl(char *url);
 static void cleanTitle(int size, char *buff);
 static int calcDays(int month, int year);
+static void downloadFeeds();
 
 static struct item itemArray[ITEM_SIZE];
 
@@ -71,6 +72,7 @@ void getLatestItems(struct item **allItemss){
         int i,j;
 	int currentItemsCount = 0;
 
+	downloadFeeds();
         for(i=0;i<NUM_SITES;i++){
                 refreshFeed(politics[i]);
 		fillItems(&itemArray[0] + currentItemsCount);
@@ -94,16 +96,16 @@ void getLatestItems(struct item **allItemss){
 	printf("\n");
 
 	*allItemss = itemArray;
-	wait(NULL); // kill previous child zombie
+//	wait(NULL); // kill previous child zombie
 
-	pid_t child = fork(); // fork a child process to post the data to the website
-	if(child == 0){ //this is the child process
-		char json[BUFFER_SIZE];
-		getJsonFromItems(NUM_TITLES, itemArray, json);
-		cleanJson(json);
-		sendPostNews(json);
-		_exit(0);
-  	}
+//	pid_t child = fork(); // fork a child process to post the data to the website
+//	if(child == 0){ //this is the child process
+//		char json[BUFFER_SIZE];
+//		getJsonFromItems(NUM_TITLES, itemArray, json);
+//		cleanJson(json);
+//		sendPostNews(json);
+//		_exit(0);
+//  	}
 }
 
 static void fillItems(struct item *items){
@@ -124,24 +126,14 @@ int refreshFeed(struct newsAgency newsAgency)
         int k = 0;
     	FILE *fptr;
 
-	/*  open for writing */
-        fptr = fopen("feed.xml", "w");
-	if (fptr == NULL){
-		printf("%s:Could not open file feed.xml for writing \n", newsAgency.url);
-		return 1;
-	}
-
-	download_feed(fptr, newsAgency.url);
-	fclose(fptr);
-
-        int fileSize = fsize("feed.xml");
+        int fileSize = fsize(newsAgency.name);
         if (fileSize == -1){
-                printf("%s:Could not stat size of feed.xml\n", "parseXml");
+                printf("%s:Could not stat size of feed file\n", newsAgency.name);
                 return 1;
         }
 
 	/*  open for reading */
-	fptr = fopen("feed.xml", "r");
+	fptr = fopen(newsAgency.name, "r");
 	if (fptr == NULL){
 		printf("Could not open file feed.xml for reading \n");
 		return 1;
@@ -478,7 +470,7 @@ void sendPostNews(char *jsonStringValue){
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-	curl_easy_setopt(curl, CURLOPT_URL, "http://llosa.org/neri/updateNews.php");
+	curl_easy_setopt(curl, CURLOPT_URL, "http://xxxxxxxxxx/updateNews.php");
 	curl_easy_setopt(curl, CURLOPT_POST, 1);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonStringValue);
 	curl_easy_perform(curl);
@@ -502,6 +494,30 @@ void cleanJson(char *json){//urlencodes all ampersands as %26
 
 }
 
+static void downloadFeeds(){
+        int i;
+        for(i=0;i<NUM_SITES;i++){
+                if ( fork() == 0 ){
+                        FILE *fptr;
 
+                        fptr = fopen(politics[i].name, "w");
+                        if (fptr == NULL){
+                                printf("%s:Could not open file for writing \n", politics[i].name);
+                                 _exit(1);
+                        }
+
+                        download_feed(fptr, politics[i].url);
+                        fclose(fptr);
+                        _exit(0);
+                }
+        }
+        //parent code
+        pid_t pid;
+        // wait for ALL children to terminate
+        do {
+                pid = wait(NULL);
+        } while (pid != -1);
+
+}
 
 
