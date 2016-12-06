@@ -171,7 +171,7 @@ static void getLatestItems(int type){
 		fprintf(stderr, "mysql_init() failed\n");
 		return;
 	}
-	if (mysql_real_connect(con, "localhost", "llosaus_neri", "carpa1", "llosaus_neri", 0, NULL, 0) == NULL){
+	if (mysql_real_connect(con, "localhost", "*******", "*******", "*******", 0, NULL, 0) == NULL){
 		fprintf(stderr, "%s\n", mysql_error(con));
 		mysql_close(con);
 		return;
