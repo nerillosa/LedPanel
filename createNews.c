@@ -2,6 +2,7 @@
 * C function that gets the latest rss feeds from various news agencies and extracts the titles
 * Uses libcurl open source library to download feed.xml
 * The function accounts that the file downloaded is not necessarily a xml file and may not be "proper"
+* Compile with : gcc createNews.c -o createNews -lcurl `mysql_config --cflags --libs`
 */
 
 #include <stdio.h>
@@ -12,6 +13,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
+#include <my_global.h>
+#include <mysql.h>
 
 #define OUT 0
 #define IN  1
@@ -37,21 +40,7 @@ struct hcodes{
 	char *hcode;
 	char value;
 } codes[] = {{"&#x2014;",'-'},{"&#8211;",'-'},{"&#8212;",'-'},{"&#x2018;",'\''},{"&#x2019;",'\''},{"&#8216;",'\''},{"&#8217;",'\''},{"&#8220;",'"'},{"&#8221;",'"'},{"&#8230;",'~'},{"&#160;",' '}};
-/*
-struct newsAgency {
-	char name[10];
-	char *url;
-} politics[] =  {
-	{"FOX NEWS","http://feeds.foxnews.com/foxnews/politics?format=xml"},
-	{"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"},
-	{"WSH POST","http://feeds.washingtonpost.com/rss/rss_powerpost"},
-	{"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
-	{"ABC NEWS","http://feeds.abcnews.com/abcnews/politicsheadlines"},
-	{"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
-	{"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
-	{"US TODAY","http://rssfeeds.usatoday.com/usatodaycomwashington-topstories&x=1"},
-};
-*/
+
 struct newsAgency {
         int type;
         char name[10];
@@ -64,26 +53,48 @@ struct newsAgency {
                 {7,"FOX NEWS","http://feeds.foxnews.com/foxnews/national?format=xml"},
 
                 {1,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml"},
+                {2,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Science.xml"},
                 {3,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/World.xml"},
                 {4,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Sports.xml"},
-                {2,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Science.xml"},
                 {6,"NY TIMES","http://rss.nytimes.com/services/xml/rss/nyt/Health.xml"},
 
                 {1,"CNN","http://rss.cnn.com/rss/cnn_allpolitics.rss"},
                 {3,"CNN","http://rss.cnn.com/rss/cnn_world.rss"},
+                {5,"CNN","http://rss.cnn.com/rss/cnn_showbiz.rss"},
                 {6,"CNN","http://rss.cnn.com/rss/cnn_health.rss"},
                 {7,"CNN","http://rss.cnn.com/rss/cnn_us.rss"},
-                {5,"CNN","http://rss.cnn.com/rss/cnn_showbiz.rss"},
 
                 {1,"WSH POST","http://feeds.washingtonpost.com/rss/rss_powerpost"},
+		{2,"WSH POST","http://www.washingtonpost.com/wp-dyn/rss/technology/index.xml"},
+                {6,"WSH POST","http://www.washingtonpost.com/wp-dyn/rss/health/index.xml"},
+                {7,"WSH POST","http://www.washingtonpost.com/wp-dyn/rss/nation/index.xml"},
+
                 {1,"CNBC","http://www.cnbc.com/id/10000113/device/rss/rss.html"},
+                {2,"CNBC","http://www.cnbc.com/id/19854910/device/rss/rss.html"},
+                {3,"CNBC","http://www.cnbc.com/id/100727362/device/rss/rss.html"},
+                {6,"CNBC","http://www.cnbc.com/id/10000108/device/rss/rss.html"},
+                {7,"CNBC","http://www.cnbc.com/id/15837362/device/rss/rss.html"},
+
                 {1,"ABC NEWS","http://feeds.abcnews.com/abcnews/politicsheadlines"},
+                {2,"ABC NEWS","http://feeds.abcnews.com/abcnews/technologyheadlines"},
+                {3,"ABC NEWS","http://feeds.abcnews.com/abcnews/internationalheadlines"},
+		{4,"ABC NEWS","http://feeds.abcnews.com/abcnews/sportsheadlines"},
+                {5,"ABC NEWS","http://feeds.abcnews.com/abcnews/entertainmentheadlines"},
+                {6,"ABC NEWS","http://feeds.abcnews.com/abcnews/healthheadlines"},
+                {7,"ABC NEWS","http://feeds.abcnews.com/abcnews/usheadlines"},
+
                 {1,"REUTERS","http://feeds.reuters.com/Reuters/PoliticsNews"},
+                {2,"REUTERS","http://feeds.reuters.com/reuters/scienceNews"},
+                {3,"REUTERS","http://feeds.reuters.com/Reuters/worldNews"},
+                {4,"REUTERS","http://feeds.reuters.com/reuters/sportsNews"},
+                {5,"REUTERS","http://feeds.reuters.com/reuters/entertainment"},
+                {6,"REUTERS","http://feeds.reuters.com/reuters/healthNews"},
+                {7,"REUTERS","http://feeds.reuters.com/Reuters/domesticNews"},
 
                 {1,"US TODAY","http://rssfeeds.usatoday.com/usatodaycomwashington-topstories&x=1"},
-                {7,"US TODAY","http://rssfeeds.usatoday.com/usatodaycomnation-topstories&x=1"},
                 {4,"US TODAY","http://rssfeeds.usatoday.com/usatodaycomsports-topstories&x=1"},
                 {5,"US TODAY","http://rssfeeds.usatoday.com/usatoday-lifetopstories&amp;x=1"},
+                {7,"US TODAY","http://rssfeeds.usatoday.com/usatodaycomnation-topstories&x=1"},
 
                 };
 
@@ -104,9 +115,11 @@ static void getContent(int dest_size, char *dest, char *starttag, char *endtag, 
 static int refreshFeed(struct newsAgency newsAgency);
 static int compare_pubDates(const void* a, const void* b);
 static void cleanRssDateString(char *rssDateString);
-static void getJsonFromItems(int size, struct item *items, char *json, int type);
-static void sendPostNews(char *jsonStringValue);
-static void cleanJson(char *json);
+
+static void getInsertString(struct item *item, char *json, int type);
+static void cleanDateString(char *rssDateString);
+static void escapeQuotes(char *title);
+
 static void cleanUrl(char *url);
 static void cleanTitle(int size, char *buff);
 static int calcDays(int month, int year);
@@ -138,7 +151,7 @@ static void getLatestItems(int type){
 	printf("currentItemsCount:%d\n",currentItemsCount);
 
 	for(i=0;i<currentItemsCount;i++){
-		cleanRssDateString(itemArray[i].pubDate); // attempt to normalize all dates to GMT/UTC time
+		cleanRssDateString(itemArray[i].pubDate); // attempt to normalize all dates to MST time
 	}
 
 	qsort(itemArray, currentItemsCount, sizeof(struct item), compare_pubDates); //sort by pubDate descending
@@ -148,19 +161,30 @@ static void getLatestItems(int type){
 		printf("%s::",itemArray[i].pubDate);
 		printf("%s\n",itemArray[i].agency);
 	}
-	printf("\n");
+	printf("\n\n");
 
-	//	*allItemss = itemArray;
-	wait(NULL); // kill previous child zombie
+	char buff[1024];
 
-	pid_t child = fork(); // fork a child process to post the data to the website
-	if(child == 0){ //this is the child process
-		char json[BUFFER_SIZE];
-		getJsonFromItems(NUM_TITLES, itemArray, json, type);
-		cleanJson(json);
-		sendPostNews(json);
-		_exit(0);
+	MYSQL *con = mysql_init(NULL);
+
+	if (con == NULL){
+		fprintf(stderr, "mysql_init() failed\n");
+		return;
 	}
+	if (mysql_real_connect(con, "localhost", "llosaus_neri", "carpa1", "llosaus_neri", 0, NULL, 0) == NULL){
+		fprintf(stderr, "%s\n", mysql_error(con));
+		mysql_close(con);
+		return;
+	}
+	for(i=0;i<NUM_TITLES;i++){
+		getInsertString(&itemArray[i], buff, type);
+		puts(buff);
+		if (mysql_query(con, buff)){
+			fprintf(stderr, "%s\n", mysql_error(con));
+		}
+	}
+	mysql_close(con);
+
 }
 
 static void fillItems(struct item *items){
@@ -318,11 +342,11 @@ void getTitle(char *line){
 
 	int size = BUFFER_SIZE - (p1 - buff);
 	cleanTitle(size, p1);
-
+	escapeQuotes(p1);
 	strcpy(line, p1);
 }
 
-//Removes 3 consecutive chars with MSB set to 1 and replaces them with a '\''
+//Removes 3 consecutive chars with MSB (utf-8) set to 1 and replaces them with a '\''
 void cleanTitle(int size, char *buff){
 	int i;
 	for(i=0;i<size;i++){
@@ -463,25 +487,28 @@ void cleanRssDateString(char *rssDateString){
 
 	char *p = rssDateString;
 	p += strlen(p)-5;
+	int diff = 7; // MST = UTC -7
+	int delta= 0;
 	if(*p == '-' || *p == '+'){
-		int diff = atoi(p)/100;
-		if(diff){
-			tmA.tm_hour -= diff;
-			if(tmA.tm_hour < 0) {
-				tmA.tm_hour += 24;
-				if(tmA.tm_mday > 1){
-					tmA.tm_mday -= 1;
-				}else{
-					tmA.tm_mon -= 1;
-					if(tmA.tm_mon < 0){ // its January 1st!
-						tmA.tm_mon = 11;
-						tmA.tm_year -= 1;
-					}else
-						tmA.tm_mday = calcDays(tmA.tm_mon, 1900 + tmA.tm_year);
-				}
+		delta = atoi(p)/100;
+	}
+	diff += delta;
+	if(diff){
+		tmA.tm_hour -= diff;
+		if(tmA.tm_hour < 0) {
+			tmA.tm_hour += 24;
+			if(tmA.tm_mday > 1){
+				tmA.tm_mday -= 1;
+			}else{
+				tmA.tm_mon -= 1;
+				if(tmA.tm_mon < 0){ // its January 1st!
+					tmA.tm_mon = 11;
+					tmA.tm_year -= 1;
+				}else
+					tmA.tm_mday = calcDays(tmA.tm_mon, 1900 + tmA.tm_year);
 			}
-			strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
 		}
+		strftime(rssDateString, 50, "%a, %d %b %Y %H:%M:%S GMT", &tmA);
 	}
 }
 
@@ -498,62 +525,46 @@ int calcDays(int month, int year)// calculates number of days in a given month
 	return Days;
 }
 
-
-
-void getJsonFromItems(int size, struct item *items, char *json, int type){
-	strcpy(json, "value= {\"type\":");
+void getInsertString(struct item *item, char *json, int type){
 	char beth[5];
+	char rssdate[50];
+	strcpy(rssdate, item ->pubDate);
+	cleanDateString(rssdate);
 	sprintf(beth, "%d", type);
+	strcpy(json, "REPLACE INTO news (news_type,title,url,pubdate,agency) values (");
 	strcat(json, beth);
-	strcat(json, ",\"news\":[");
-	int i;
-	for(i=0;i<size;i++){
-		strcat(json, "{\"title\":\"");
-		strcat(json, items[i].title);
-		strcat(json, "\",\"");
-		strcat(json, "url\":\"");
-		strcat(json, items[i].url);
-		strcat(json, "\",\"");
-		strcat(json, "agency\":\"");
-		strcat(json, items[i].agency);
-		strcat(json, "\",\"");
-		strcat(json, "pubdate\":\"");
-		strcat(json, items[i].pubDate);
-		strcat(json, "\"},");
-	}
-	int dina = strlen(json)-1;
-	json[dina]= ']';
-	json[dina+1]= '}';
-	json[dina+2]= '\0';
+	strcat(json, ",'");
+	strcat(json, item ->title);
+	strcat(json, "','");
+	strcat(json, item ->url);
+	strcat(json, "',STR_TO_DATE('");
+	strcat(json, rssdate);
+	strcat(json, "','%Y-%m-%d %H:%i:%S'),'");
+	strcat(json, item ->agency);
+	strcat(json, "')");
 }
 
-void sendPostNews(char *jsonStringValue){
-	CURL *curl;
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-	curl_easy_setopt(curl, CURLOPT_URL, "http://llosa.org/neri/updateNews.php");
-	curl_easy_setopt(curl, CURLOPT_POST, 1);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonStringValue);
-	curl_easy_perform(curl);
-	curl_easy_cleanup(curl);
+void cleanDateString(char *rssDateString){
+        struct tm tmA;
+        memset(&tmA, 0, sizeof(struct tm));
+        strptime(rssDateString,"%a, %d %b %Y %H:%M:%S %Z", &tmA);
+        strftime(rssDateString, 50, "%Y-%m-%d %H:%M:%S", &tmA);
 }
 
-void cleanJson(char *json){//urlencodes all ampersands as %26
-	char *p;
-	int i;
-	while((p = strstr(json, "&"))){
-		size_t sz = strlen(json);
-		size_t rr = p - &json[0];
-		for(i=0;i<sz-rr;i++){
-			json[sz+1-i]=json[sz-1-i];
-		}
-		*p = '%';
-		*(p+1) = '2';
-		*(p+2) = '6';
-		json[sz+2] = '\0';
-	}
-
+void escapeQuotes(char *title){//add another quote to a quote: ''
+        char *p;
+        int i;
+        if(p = strstr(title, "'")){
+                size_t sz = strlen(title);
+                size_t rr = p - &title[0];
+                for(i=0;i<sz-rr;i++){
+                        title[sz+1-i]=title[sz-i];
+                }
+                *(p+1) = '\'';
+                title[sz+1] = '\0';
+                if(strlen(p+2))
+                        escapeQuotes(p+2);
+        }
 }
 
 void downloadFeeds(int type){
