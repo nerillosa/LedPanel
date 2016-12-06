@@ -183,8 +183,19 @@ static void getLatestItems(int type){
 			fprintf(stderr, "%s\n", mysql_error(con));
 		}
 	}
-	mysql_close(con);
 
+	//Leave at least 80 records for each category
+	strcpy(buff, "DELETE FROM news WHERE pubdate < (select pubdate from (select * from news)a where news_type=");
+        char beth[5];
+        sprintf(beth, "%d", type);
+	strcat(buff, beth);
+	strcat(buff, " order by pubdate desc limit 79,1) and news_type=");
+	strcat(buff, beth);
+	if (mysql_query(con, buff)){
+		fprintf(stderr, "%s\n", mysql_error(con));
+	}
+
+	mysql_close(con);
 }
 
 static void fillItems(struct item *items){
