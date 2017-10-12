@@ -28,7 +28,8 @@ To compile and run the program you don't need any fancy Makefile or complicated 
 gcc -o movingShape -l rt movingShape.c lcdshapes.c -l bcm2835 <br>
 sudo ./movingShape
 
-```c
+```java
+
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,6 +71,7 @@ void paintCanvas(uint8_t *canvas){
 		drawSmileyFace(moveOffset + 7, 8, 15, canvas); // smile!
 	}
 }
+
 ```
 ## Motivation
 
