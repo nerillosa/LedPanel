@@ -75,14 +75,3 @@ void paintCanvas(uint8_t *canvas){
 
 I delved in moving message panels back in 1997. There was no raspberry pi then. I used a 80C31 microcontroller and the program was written directly in assembly language. There were no tri-color LEDs either. I used a 8x80 panel constructed with red Leds and cardboard backing. I had to add all the LED driver hardware and their controller chips. This included shift registers, latches, NAND gates, power transistors, etc. It was fascinating and challenging work then and still is to this day. Today, the panels come with all their support hardware included so the low current, 3.3 V outputs of a Raspberry Pi are enough to drive them. All you have to do is connect 12 wires and a power supply, add some software and the rpi (with "unlimited" memory as opposed to the 64k of thhe 80C31), and you're good to go.
 
-## API Reference
-
-Depending on the size of the project, if it is small and simple enough the reference docs can be added to the README. For medium size to larger projects it is important to at least provide a link to where the API reference docs live.
-
-## Tests
-
-Describe and show how to run the tests with code examples.
-
-## License
-
-GNU GENERAL PUBLIC LICENSE as described in License.txt
