@@ -6,6 +6,7 @@ This projects describes how to put together LED panels and control them using a 
 In a nutshell, they are the so-called "1/8 scanning" panels. Pixels are divided in groups of 8 and are rendered one group at a time. The panels are 16x32 (16 rows and 32 columns). For this project, I am using two of them connected in series (one's ouptut connects to the other's input). You can also test with a single panel. The 8 groups are arranged in rows: 1st and 9th, 2nd and 10th, 3rd and 11th, ..., 8th and 16th.
 Each LED is basically 3 LEDS in one, as it has RGB components. This amounts to 16x32x3 = 1536 LEDS.
 Each panel has a total of 12 control pins:
+
 * A, B, and C. These 3 inputs define the current row group. 000-111 
 * R1,G1,B1,R2,G2,B2. These are the color inputs for each LED. R1,G1,B1 control rows 1-8. R2,G2,B2 control rows 9-16. This makes it easy to divide the screen into two independent lines of text.
 * OE, CLK, and LAT. These are pure control. The OE (output enable) enables/disables display when changing row group. It enables output with a LOW value. CLK is the Clock. This works on the negative edge and is used to shift the data inputs (R1,G1,B1,R2,G2,B2) 32 (or 64 if you have two panels connected together) times for each row.
